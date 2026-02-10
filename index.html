@@ -502,9 +502,7 @@ function App(){
   };
 
   const MaintDetail=({type,record,onClose})=>{
-    // Detay modalında doğru listeyi göster
     const fuelType = getFuelType(record.fid);
-    const items = getListForType(lists, type, fuelType);
     const color=type==="m250"?"var(--amber)":type==="m500"?"var(--blue)":type==="m2000"?"#a855f7":"var(--green)";
     const doneItems = record.checksArr || [];
     return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{border:`1px solid ${color}40`}} onClick={e=>e.stopPropagation()}>
@@ -517,10 +515,11 @@ function App(){
     <div className="dr"><span className="dl">Tarih</span><span className="dv">{fd(record.dt)}</span></div>
     {record.notes&&<div className="dr"><span className="dl">Notlar</span><span className="dv">{record.notes}</span></div>}
     </div>
-    <div style={{fontSize:12,color:"var(--mute)",fontWeight:600,marginBottom:8}}>YAPILAN İŞLER ({doneItems.length}/{items.length})</div>
+    <div style={{fontSize:12,color:"var(--mute)",fontWeight:600,marginBottom:8}}>YAPILAN İŞLER ({doneItems.length} madde)</div>
     <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:300,overflowY:"auto"}}>
-    {items.filter(item => doneItems.includes(item)).map((item,i)=>{
-    return(<div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#22c55e08",borderRadius:6,border:"1px solid #22c55e20"}}><span style={{fontSize:14}}>✅</span><span style={{fontSize:12,color:"var(--text)"}}>{item}</span></div>);})}
+    {doneItems.length > 0 ? doneItems.map((item,i)=>(
+    <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#22c55e08",borderRadius:6,border:"1px solid #22c55e20"}}><span style={{fontSize:14}}>✅</span><span style={{fontSize:12,color:"var(--text)"}}>{item}</span></div>
+    )) : <div style={{padding:16,textAlign:"center",color:"var(--dark)",fontSize:13}}>Kayıtlı yapılan iş bulunamadı</div>}
     </div></div></div>);
   };
 
@@ -620,7 +619,7 @@ function App(){
                 const type=r.tot===m2000Len?"m2000":r.tot===m500Len?"m500":"m250";
                 const color=type==="m2000"?"#a855f7":type==="m500"?"var(--blue)":"var(--amber)";
                 const colorBg=type==="m2000"?"#a855f720":type==="m500"?"#3b82f620":"#f59e0b20";
-                return<div key={r.id} className="card" style={{marginBottom:6,borderLeft:`3px solid ${color}`,cursor:"pointer"}} onClick={()=>setDetailModal({type,record:r})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}><div><span style={{fontWeight:700}}>{r.fn}</span>{isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>}<span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>@ {r.h}h</span></div><span className="badge" style={{background:colorBg,color}}>{r.done}/{r.tot} — detay →</span></div><div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Teknisyen: <b style={{color:"var(--dim)"}}>{r.tech}</b> • {fd(r.dt)}</div></div>;
+                return<div key={r.id} className="card" style={{marginBottom:6,borderLeft:`3px solid ${color}`,cursor:"pointer"}} onClick={()=>setDetailModal({type,record:r})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}><div><span style={{fontWeight:700}}>{r.fn}</span>{isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>}<span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>@ {r.h}h</span></div><span className="badge" style={{background:colorBg,color}}>{r.done} yapıldı — detay →</span></div><div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Teknisyen: <b style={{color:"var(--dim)"}}>{r.tech}</b> • {fd(r.dt)}</div></div>;
             });
         })()}
       </div>}
@@ -631,7 +630,7 @@ function App(){
           if(!ws.length)return<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Kayıt yok</div>;
           return ws.map(w=>{
               const fuelType = getFuelType(w.fid);
-              return <div key={w.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--green)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"weekly",record:w})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}><div><span style={{fontWeight:700}}>{w.fn}</span>{isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>}<span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>{w.h}h</span></div><span className="badge" style={{background:"#22c55e20",color:"#4ade80"}}>{w.done}/{w.tot} — detay →</span></div><div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Operatör: <b style={{color:"var(--dim)"}}>{w.tech}</b> • {fd(w.dt)}</div></div>;
+              return <div key={w.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--green)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"weekly",record:w})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}><div><span style={{fontWeight:700}}>{w.fn}</span>{isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>}<span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>{w.h}h</span></div><span className="badge" style={{background:"#22c55e20",color:"#4ade80"}}>{w.done} yapıldı — detay →</span></div><div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Operatör: <b style={{color:"var(--dim)"}}>{w.tech}</b> • {fd(w.dt)}</div></div>;
           });
       })()}
 
