@@ -145,6 +145,8 @@ const getSavedTranspalets = () => JSON.parse(localStorage.getItem("opus_transpal
 const saveTranspalets = (list) => localStorage.setItem("opus_transpalets", JSON.stringify(list));
 const getSavedTPChecks = () => JSON.parse(localStorage.getItem("opus_tp_checks") || "[]");
 const saveTPChecks = (list) => localStorage.setItem("opus_tp_checks", JSON.stringify(list));
+const getSavedTPFaults = () => JSON.parse(localStorage.getItem("opus_tp_faults") || "[]");
+const saveTPFaults = (list) => localStorage.setItem("opus_tp_faults", JSON.stringify(list));
 
 const ChkList=memo(function ChkList({items,chkRef}){
   const [checks,setChecks]=useState({});
@@ -347,10 +349,13 @@ function App(){
   /* TRANSPALET STATE */
   const [transpalets, setTranspalets] = useState(getSavedTranspalets());
   const [tpChecks, setTpChecks] = useState(getSavedTPChecks());
+  const [tpFaults, setTpFaults] = useState(getSavedTPFaults());
   const [selTP, setSelTP] = useState(null);
+  const [tpRepTgt, setTpRepTgt] = useState(null);
 
   const flRefs={name:useRef(),brand:useRef(),model:useRef(),hours:useRef(),fuel:useRef()};
   const tpRefs={name:useRef(),brand:useRef(),model:useRef()};
+  const tpRepRefs={by:useRef(),desc:useRef(),date:useRef()};
   const rpRefs={by:useRef(),hours:useRef(),desc:useRef(),parts:useRef(),date:useRef()};
 
   const fetchData = () => {
@@ -549,6 +554,8 @@ function App(){
       setTranspalets(updated); saveTranspalets(updated);
       const updatedChecks = tpChecks.filter(c => c.tpId !== id);
       setTpChecks(updatedChecks); saveTPChecks(updatedChecks);
+      const updatedFaults = tpFaults.filter(f => f.tpId !== id);
+      setTpFaults(updatedFaults); saveTPFaults(updatedFaults);
       showToast("Transpalet Silindi");
   };
 
@@ -556,14 +563,70 @@ function App(){
       const checks = tpChecks.filter(c => c.tpId === tp.id).sort((a,b) => new Date(b.dt) - new Date(a.dt));
       const last = checks[0];
       const dw = last ? Math.floor((Date.now() - new Date(last.dt).getTime()) / 864e5) : 999;
-      return { last, dw, overdue: dw > 30, checks };
-  }, [tpChecks]);
+      const faults = tpFaults.filter(f => f.tpId === tp.id).sort((a,b) => new Date(b.dt) - new Date(a.dt));
+      const openFaults = faults.filter(f => f.st === 'open');
+      return { last, dw, overdue: dw > 30, checks, faults, openFaults, hasFault: openFaults.length > 0 };
+  }, [tpChecks, tpFaults]);
 
   const TPStatusBadge = ({tp}) => {
       const s = getTPStatus(tp);
+      if(s.hasFault) return <span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;
       if(s.overdue) return <span className="badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;
       return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;
   };
+
+  /* Transpalet arıza bildirimi */
+  const submitTPFault = (tpId, tpName, by, desc, prio, date) => {
+      const fault = { id: uid(), tpId, tpName, by, desc, prio, dt: date || new Date().toISOString(), st: 'open' };
+      const updated = [...tpFaults, fault];
+      setTpFaults(updated); saveTPFaults(updated);
+      // Google Sheets'e de kaydet
+      sendData('tp_fault', { flId: tpId, flName: tpName, person: by, hours: 0, note: desc, date });
+  };
+
+  /* Transpalet arıza kapatma */
+  const closeTPFault = (faultId, by, desc, date) => {
+      const updated = tpFaults.map(f => f.id === faultId ? {...f, st:'closed', closedBy:by, closedDesc:desc, closedDt:date||new Date().toISOString()} : f);
+      setTpFaults(updated); saveTPFaults(updated);
+      showToast("Arıza Kapatıldı!");
+      setTpRepTgt(null);
+  };
+
+  /* Transpalet Arıza Formu */
+  const TPFaultForm = ({tp}) => {
+      const r = {by:useRef(), desc:useRef(), prio:useRef(), date:useRef()};
+      const today = new Date().toISOString().split('T')[0];
+      const handle = () => {
+          const by=r.by.current.value.trim(), desc=r.desc.current.value.trim(), date=r.date.current.value;
+          if(!by||!desc||!date) return alert("Eksik bilgi.");
+          submitTPFault(tp.id, tp.name, by, desc, r.prio.current.value, date);
+          r.by.current.value=""; r.desc.current.value="";
+      };
+      return (<div className="card"><h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:"var(--red)"}}>🔴 Arıza Bildirimi</h3>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <div><label className="lbl">Tarih</label><input ref={r.date} type="date" className="inp" defaultValue={today} /></div>
+      <div><label className="lbl">Bildiren</label><input ref={r.by} className="inp" placeholder="Ad Soyad"/></div>
+      <div><label className="lbl">Öncelik</label><select ref={r.prio} className="inp" defaultValue="normal">{Object.entries(PRIO).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+      <div><label className="lbl">Açıklama</label><textarea ref={r.desc} className="inp" placeholder="Arıza nedir?"/></div>
+      <button className="btn btn-red" style={{width:"100%",justifyContent:"center"}} onClick={handle}>🔴 Arıza Bildir</button>
+      </div></div>);
+  };
+
+  /* Transpalet Arıza Kapatma Modalı */
+  const TPRepairModal = () => tpRepTgt && (
+      <div className="overlay" onClick={()=>setTpRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Transpalet Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setTpRepTgt(null)}>✕</button></div>
+      <div style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:12,fontSize:13}}><div style={{fontWeight:700}}>{tpRepTgt.tpName}</div><div style={{color:"var(--dim)",marginTop:4}}>{tpRepTgt.desc}</div></div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <div><label className="lbl">Tarih</label><input ref={tpRepRefs.date} type="date" className="inp" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+      <div><label className="lbl">Tamir Eden *</label><input ref={tpRepRefs.by} className="inp" placeholder="Teknisyen adı"/></div>
+      <div><label className="lbl">Yapılan İşlemler</label><textarea ref={tpRepRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
+      <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
+          const by=tpRepRefs.by.current?.value?.trim(); if(!by) return alert("İsim gir");
+          closeTPFault(tpRepTgt.id, by, tpRepRefs.desc.current?.value, tpRepRefs.date.current?.value);
+      }}>✅ Arızayı Kapat</button>
+      </div></div></div>
+  );
   const doCloseFault=()=>{
     const by=rpRefs.by.current?.value?.trim(); if(!by)return alert("İsim gir");
     const date = rpRefs.date.current.value;
@@ -573,8 +636,8 @@ function App(){
   const stats=useMemo(()=>{
     let ov=0,wr=0,ft=0;
     data.forklifts.forEach(f=>{const s=gS(f);if(s.inF)ft++;if(s.o2||s.o5||s.o20||s.ow)ov++;else if(s.w2||s.w5||s.w20)wr++;});
-    let tpOv=0; transpalets.forEach(tp=>{if(getTPStatus(tp).overdue) tpOv++;});
-    return{tot:data.forklifts.length,ft,ov:ov+tpOv,wr,of:data.faults.filter(f=>f.st==="open").length,tpTot:transpalets.length,tpOv};
+    let tpOv=0,tpFt=0; transpalets.forEach(tp=>{const s=getTPStatus(tp);if(s.overdue) tpOv++;if(s.hasFault) tpFt++;});
+    return{tot:data.forklifts.length,ft:ft+tpFt,ov:ov+tpOv,wr,of:data.faults.filter(f=>f.st==="open").length,tpTot:transpalets.length,tpOv};
   },[data,gS,transpalets,tpChecks]);
 
   const Badge=({f})=>{const s=gS(f);
@@ -767,7 +830,13 @@ function App(){
     </div>
   );
 
-  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp forkliftlere yapıştırın</p></div></div>{!data.forklifts.length&&<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Forklift yok.</div>}<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`forklift://${f.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div></div>);
+  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
+  {data.forklifts.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>}
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`forklift://${f.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
+  {transpalets.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>}
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{transpalets.map(tp=><div key={tp.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`transpalet://${tp.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{tp.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{tp.brand} {tp.model}</div><div style={{marginTop:4}}><TPBadge/></div><div className="mono" style={{fontSize:12,color:"var(--cyan)",marginTop:3}}>{tp.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelTP(tp);setPg("tp")}}>Mobil Aç</button></div>)}</div>
+  {!data.forklifts.length&&!transpalets.length&&<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman yok.</div>}
+  </div>);
 
   const Mobile=()=>{
     if(!sel)return(
@@ -839,26 +908,71 @@ function App(){
   );
 
   /* TRANSPALET SAYFASI */
+  const [tpTab, setTpTab] = useState("status");
+
   const TranspaletPage = () => {
       if(selTP) {
           const tpS = getTPStatus(selTP);
           return (<div style={{maxWidth:420,margin:"0 auto",padding:16}}>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSelTP(null)}>←</button>
+                <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelTP(null);setTpTab("status")}}>←</button>
                 <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selTP.name}</span><TPBadge/><TPStatusBadge tp={selTP}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selTP.brand,selTP.model].filter(Boolean).join(" • ")}</div></div>
               </div>
-              <div className="card" style={{borderLeft:`3px solid ${tpS.overdue?"var(--red)":"var(--green)"}`,marginBottom:12}}>
-                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
-                <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
-                {tpS.last && <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
+
+              <div className="tabs" style={{marginBottom:12}}>
+                {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Kayıtlar"}].map(t=>
+                  <div key={t.k} className={`tab${tpTab===t.k?" active":""}`} onClick={()=>setTpTab(t.k)}>{t.l}</div>
+                )}
               </div>
-              <FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />
-              {tpS.checks.length > 0 && <div style={{marginTop:14}}>
-                <div style={{fontSize:12,fontWeight:700,color:"var(--mute)",marginBottom:8}}>GEÇMİŞ KONTROLLER</div>
-                {tpS.checks.map(c => (<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
-                  <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
-                </div>))}
+
+              {/* DURUM */}
+              {tpTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <div className="card" style={{borderLeft:`3px solid ${tpS.overdue?"var(--red)":"var(--green)"}`}}>
+                  <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
+                  <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+                  {tpS.last && <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
+                </div>
+                {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
+                  <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({tpS.openFaults.length})</div>
+                  {tpS.openFaults.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}>
+                    <div style={{fontWeight:600}}>{f.desc}</div>
+                    <div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.dt)}</div>
+                  </div>)}
+                </div>}
+              </div>}
+
+              {/* ARIZA */}
+              {tpTab==="fault"&&<TPFaultForm tp={selTP}/>}
+
+              {/* AYLIK KONTROL FORMU */}
+              {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />}
+
+              {/* GEÇMİŞ KAYITLAR */}
+              {tpTab==="history"&&<div>
+                {/* Aylık kontrol kayıtları */}
+                {tpS.checks.length > 0 && <div style={{marginBottom:14}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>AYLIK KONTROLLER</div>
+                  {tpS.checks.map(c => (<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
+                    <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
+                  </div>))}
+                </div>}
+                {/* Arıza kayıtları */}
+                {tpS.faults.length > 0 && <div>
+                  <div style={{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:8}}>ARIZA KAYITLARI</div>
+                  {tpS.faults.map(f => (<div key={f.id} className="card" style={{marginBottom:6,borderLeft:`3px solid ${f.st==='open'?'var(--red)':'var(--green)'}`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
+                      <div style={{flex:1}}>
+                        <span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span>
+                        <p style={{fontSize:13,marginTop:4,lineHeight:1.5}}>{f.desc}</p>
+                        <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b> • {fd(f.dt)}</div>
+                        {f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}
+                      </div>
+                      {f.st==="open"&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
+                    </div>
+                  </div>))}
+                </div>}
+                {tpS.checks.length===0 && tpS.faults.length===0 && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
               </div>}
           </div>);
       }
@@ -869,8 +983,8 @@ function App(){
           </div>
           {!transpalets.length && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz transpalet yok. Ayarlardan ekleyin.</div>}
           {transpalets.map(tp => { const tpS = getTPStatus(tp); return (
-            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.overdue?"#ef444430":undefined}} onClick={()=>setSelTP(tp)}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/><div style={{fontSize:11,color:tpS.overdue?"var(--red)":"var(--dim)",marginTop:3,fontWeight:600}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div>
+            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#ef444430":undefined}} onClick={()=>{setSelTP(tp);setTpTab("status")}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/><div style={{fontSize:11,color:tpS.overdue||tpS.hasFault?"var(--red)":"var(--dim)",marginTop:3,fontWeight:600}}>{tpS.hasFault?tpS.openFaults.length+" açık arıza":tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div>
             </div>);})}
       </div>);
   };
@@ -933,6 +1047,7 @@ function App(){
   {modal==="add_tp"&&<AddTPModal/>}
   {modal==="list_edit" && <ListEditor onClose={()=>setModal("settings")} onSave={setLists} />}
   <RepairModal/>
+  <TPRepairModal/>
   {detailModal&&<MaintDetail type={detailModal.type} record={detailModal.record} onClose={()=>setDetailModal(null)}/>}
   {confirmDel&&<Confirm msg={confirmDel.msg} onYes={()=>{if(confirmDel.type==="transpalet"){deleteTranspalet(confirmDel.id)}else{deleteForklift(confirmDel.id)} setConfirmDel(null);}} onNo={()=>setConfirmDel(null)}/>}
   {fuelModal&&<FuelTypeModal forklift={fuelModal} onClose={()=>setFuelModal(null)} onSave={()=>{setFuelRefresh(p=>p+1); fetchData();}} />}
