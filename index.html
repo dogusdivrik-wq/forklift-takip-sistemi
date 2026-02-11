@@ -88,8 +88,7 @@ const DEFAULT_LISTS={m250:DEF_M250,m500:DEF_M500,m2000:DEF_M2000,weekly:DEF_WCHK
 const getListForType=(lists,maintType,fuelType)=>{
   const elc=isElectric(fuelType);
   switch(maintType){
-    case 'm250':return elc?lists.em250:lists.m250;
-    case 'm500':return elc?lists.em500:lists.m500;
+    case 'm250':return elc?lists.em250:lists.m250;    case 'm500':return elc?lists.em500:lists.m500;
     case 'm2000':return elc?lists.em2000:lists.m2000;
     case 'weekly':return elc?lists.eweekly:lists.weekly;
     default:return[];
@@ -114,7 +113,8 @@ function matchFaultsToRepairs(faultRows,repairRows){
 }
 const FuelBadge=({fuelType})=>{const f=gf(fuelType);return <span className={`fuel-badge ${fuelType}`}>{f.e} {f.l}</span>;};
 const TPBadge=()=><span className="tp-badge">🔋 Elektrikli Transpalet</span>;
-const STBadge=()=><span className="st-badge">🏗️ İstif Makinesi</span>;const ChkList=memo(function ChkList({items,chkRef}){
+const STBadge=()=><span className="st-badge">🏗️ İstif Makinesi</span>;
+const ChkList=memo(function ChkList({items,chkRef}){
   const [checks,setChecks]=useState({});
   useEffect(()=>{chkRef.current=checks;},[checks]);
   return(<div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:260,overflowY:"auto",paddingRight:4}}>
@@ -126,19 +126,16 @@ const STBadge=()=><span className="st-badge">🏗️ İstif Makinesi</span>;cons
     ))}
   </div>);
 });
-
 function QRCode({data,sz=120}){
   const url="https://api.qrserver.com/v1/create-qr-code/?size="+sz+"x"+sz+"&data="+encodeURIComponent(window.location.href.split('?')[0]+"?id="+data.split('://')[1]);
   return <img src={url} style={{borderRadius:8,border:'4px solid white'}} width={sz} height={sz} alt="QR"/>;
 }
-
 function Confirm({msg,onYes,onNo}){
   return(<div className="overlay" onClick={onNo}><div className="card mbody" style={{maxWidth:380,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
     <p style={{fontSize:15,marginBottom:16,lineHeight:1.6}}>{msg}</p>
     <div style={{display:"flex",gap:8,justifyContent:"center"}}><button className="btn btn-red" onClick={onYes}>Evet</button><button className="btn btn-ghost" onClick={onNo}>İptal</button></div>
   </div></div>);
 }
-
 const FormTemplate=({title,color,items,onSubmit,sel,noHours})=>{
   const r={tech:useRef(),hours:useRef(),notes:useRef(),date:useRef()};
   const chkRef=useRef({});
@@ -182,7 +179,6 @@ const FormTemplate=({title,color,items,onSubmit,sel,noHours})=>{
     </div>
   </div>);
 };
-
 const FaultForm=({sel,onSubmit,isNoHours})=>{
   const r={by:useRef(),hours:useRef(),prio:useRef(),desc:useRef(),date:useRef()};
   const today=new Date().toISOString().split('T')[0];
@@ -210,9 +206,7 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
       <div><label className="lbl">Açıklama</label><textarea ref={r.desc} className="inp" placeholder="Arıza nedir?"/></div>
       <button className="btn btn-red" style={{width:"100%",justifyContent:"center"}} onClick={handle}>🔴 Arıza Bildir</button>
     </div></div>);
-};
-
-const ListEditor=({onClose,onSave,lists,sendData})=>{
+};const ListEditor=({onClose,onSave,lists,sendData})=>{
   const [localLists,setLocalLists]=useState(JSON.parse(JSON.stringify(lists)));
   const [activeTab,setActiveTab]=useState("m250");
   const [newItem,setNewItem]=useState("");
@@ -258,7 +252,6 @@ const ListEditor=({onClose,onSave,lists,sendData})=>{
     <button className="btn btn-green" style={{width:'100%',marginTop:10,justifyContent:'center'}} onClick={save}>💾 KAYDET VE ÇIK</button>
   </div></div>);
 };
-
 const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
   const [selected,setSelected]=useState(currentFuel);
   const save=()=>{
@@ -285,7 +278,8 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     </div>
     <button className="btn btn-green" style={{width:'100%',marginTop:12,justifyContent:'center'}} onClick={save}>💾 Kaydet</button>
   </div></div>);
-};function App(){
+};
+function App(){
   const [data,setData]=useState({forklifts:[],faults:[],m250:[],m500:[],m2000:[],weekly:[]});
   const [lists,setLists]=useState(DEFAULT_LISTS);
   const [fuelTypes,setFuelTypes]=useState({});
@@ -317,34 +311,27 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
   const [stRepTgt,setStRepTgt]=useState(null);
   const [stTab,setStTab]=useState("status");
   const [passwordUnlocked,setPasswordUnlocked]=useState(false);
-
   const flRefs={name:useRef(),brand:useRef(),model:useRef(),hours:useRef(),fuel:useRef()};
   const tpRefs={name:useRef(),brand:useRef(),model:useRef()};
   const stRefs={name:useRef(),brand:useRef(),model:useRef()};
   const tpRepRefs={by:useRef(),desc:useRef(),date:useRef()};
   const stRepRefs={by:useRef(),desc:useRef(),date:useRef()};
   const rpRefs={by:useRef(),hours:useRef(),desc:useRef(),parts:useRef(),date:useRef()};
-
   const showToast=m=>{setToast(m);setTimeout(()=>setToast(null),2e3);};
-
   const checkPassword=(callback)=>{
     if(passwordUnlocked){callback();return;}
     const pw=prompt("Bu bölüme erişmek için şifre gereklidir:");
     if(pw==="137998"){setPasswordUnlocked(true);callback();}
     else if(pw!==null){alert("Yanlış şifre!");}
   };
-
   const getFuelType=(flId)=>fuelTypes[flId]||"diesel";
-
   const fetchData=()=>{
     setLoading(true);
     fetch(GOOGLE_SCRIPT_URL+"?action=read")
       .then(r=>r.json())
       .then(resp=>{setLoading(false);if(resp.data)processGoogleData(resp.data);})
       .catch(e=>{setLoading(false);showToast("Bağlantı hatası");});
-  };
-
-  const processGoogleData=(rawData)=>{
+  };  const processGoogleData=(rawData)=>{
     const newData={forklifts:[],faults:[],m250:[],m500:[],m2000:[],weekly:[]};
     const flMap={};
     const tpMap={};
@@ -435,7 +422,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     setStChecks(stChecksList);
     setStFaults(stFaultsList);
   };
-
   const sendData=(type,payload)=>{
     setLoading(true);
     const d=new FormData();
@@ -476,14 +462,12 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       })
       .catch(e=>{setLoading(false);alert("Bağlantı Hatası");});
   };
-
   useEffect(()=>{
     fetchData();
     const p=new URLSearchParams(window.location.search);
     const qid=p.get('id');
     if(qid)window.autoSelectId=qid;
   },[]);
-
   useEffect(()=>{
     if(window.autoSelectId&&(data.forklifts.length>0||transpalets.length>0||stackers.length>0)){
       const qid=window.autoSelectId;
@@ -494,7 +478,8 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       const st=stackers.find(x=>x.id===qid);
       if(st){setSelST(st);setSel(null);setSelTP(null);setStTab("status");setPg("mob");window.autoSelectId=null;return;}
     }
-  },[data,transpalets,stackers]);  const gS=useCallback(f=>{
+  },[data,transpalets,stackers]);
+  const gS=useCallback(f=>{
     const fuelType=getFuelType(f.id);
     const m2=data.m250.filter(m=>m.fid===f.id).sort((a,b)=>b.h-a.h);
     const m5=data.m500.filter(m=>m.fid===f.id).sort((a,b)=>b.h-a.h);
@@ -507,12 +492,10 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     const dw=ws[0]?Math.floor((Date.now()-new Date(ws[0].dt).getTime())/864e5):999;
     return{l2:m2[0],l5:m5[0],l20:m20[0],lw:ws[0],l2h,l5h,l20h,n2,n5,n20,r2,r5,r20,o2:r2<=0,o5:r5<=0,o20:r20<=0,w2:r2>0&&r2<=30,w5:r5>0&&r5<=50,w20:r20>0&&r20<=200,dw,ow:dw>30,opn,allF:fts,inF:opn.length>0||f.status==="fault"};
   },[data,fuelTypes]);
-
   const deleteEquipment=(id,type)=>{
     sendData('equipment_delete',{flId:id,flName:type,person:'admin',hours:0,note:'deleted'});
     showToast(type+" Silindi");
   };
-
   const addFL=()=>{
     const name=flRefs.name.current?.value?.trim();
     if(!name)return alert("Ad zorunlu.");
@@ -547,7 +530,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       setModal(null);
     }).catch(()=>{setLoading(false);alert("Hata");});
   };
-
   const addTP=()=>{
     const name=tpRefs.name.current?.value?.trim();
     if(!name)return alert("Ad zorunlu.");
@@ -555,7 +537,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     sendData('transpalet_register',{flId:tpId,flName:name,person:tpRefs.brand.current?.value?.trim()||"",note:tpRefs.model.current?.value?.trim()||"",hours:0});
     setModal(null);
   };
-
   const addST=()=>{
     const name=stRefs.name.current?.value?.trim();
     if(!name)return alert("Ad zorunlu.");
@@ -563,23 +544,19 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     sendData('stacker_register',{flId:stId,flName:name,person:stRefs.brand.current?.value?.trim()||"",note:stRefs.model.current?.value?.trim()||"",hours:0});
     setModal(null);
   };
-
   const handleFaultSubmit=({by,hours,prio,desc,date})=>sendData('fault',{person:by,hours,note:desc,date});
   const handle250=({tech,hours,notes,chk,date})=>sendData('m250',{person:tech,hours,note:notes,chk,date});
   const handle500=({tech,hours,notes,chk,date})=>sendData('m500',{person:tech,hours,note:notes,chk,date});
   const handle2000=({tech,hours,notes,chk,date})=>sendData('m2000',{person:tech,hours,note:notes,chk,date});
   const handleWk=({tech,hours,notes,chk,date})=>sendData('weekly',{person:tech,hours,note:notes,chk,date});
-
   const handleTPCheck=({tech,hours,notes,chk,date})=>{
     sendData('tp_monthly',{flId:selTP.id,flName:selTP.name,person:tech,hours:0,note:notes,chk,date});
     setTpTab("status");
   };
-
   const handleSTCheck=({tech,hours,notes,chk,date})=>{
     sendData('st_monthly',{flId:selST.id,flName:selST.name,person:tech,hours:0,note:notes,chk,date});
     setStTab("status");
   };
-
   const getTPStatus=useCallback((tp)=>{
     const checks=tpChecks.filter(c=>c.tpId===tp.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
     const last=checks[0];
@@ -588,7 +565,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     const openFaults=faults.filter(f=>f.st==='open');
     return{last,dw,overdue:dw>30,checks,faults,openFaults,hasFault:openFaults.length>0};
   },[tpChecks,tpFaults]);
-
   const getSTStatus=useCallback((st)=>{
     const checks=stChecks.filter(c=>c.stId===st.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
     const last=checks[0];
@@ -597,40 +573,33 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     const openFaults=faults.filter(f=>f.st==='open');
     return{last,dw,overdue:dw>30,checks,faults,openFaults,hasFault:openFaults.length>0};
   },[stChecks,stFaults]);
-
   const StatusBadge=({s})=>{
     if(s.hasFault)return <span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;
     if(s.overdue)return <span className="badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;
     return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;
   };
-
   const submitTPFault=(tpId,tpName,by,desc,prio,date)=>{
     sendData('tp_fault',{flId:tpId,flName:tpName,person:by,hours:0,note:desc,date});
     setTpTab("status");
   };
-
   const submitSTFault=(stId,stName,by,desc,prio,date)=>{
     sendData('st_fault',{flId:stId,flName:stName,person:by,hours:0,note:desc,date});
     setStTab("status");
   };
-
   const closeTPFault=(faultId,flId,by,desc,date)=>{
     sendData('tp_repair',{flId:flId,person:by,hours:0,note:desc,date});
     setTpRepTgt(null);
   };
-
   const closeSTFault=(faultId,flId,by,desc,date)=>{
     sendData('st_repair',{flId:flId,person:by,hours:0,note:desc,date});
     setStRepTgt(null);
   };
-
   const doCloseFault=()=>{
     const by=rpRefs.by.current?.value?.trim();
     if(!by)return alert("İsim gir");
     const date=rpRefs.date.current.value;
     sendData('repair',{flId:repTgt.fid,person:by,hours:rpRefs.hours.current?.value,note:rpRefs.desc.current?.value,date});
   };
-
   const stats=useMemo(()=>{
     let ov=0,wr=0,ft=0;
     data.forklifts.forEach(f=>{const s=gS(f);if(s.inF)ft++;if(s.o2||s.o5||s.o20||s.ow)ov++;else if(s.w2||s.w5||s.w20)wr++;});
@@ -642,9 +611,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     const stOpenFaults=stFaults.filter(f=>f.st==='open').length;
     return{tot:data.forklifts.length,ft:ft+tpFt+stFt,ov:ov+tpOv+stOv,wr,of:data.faults.filter(f=>f.st==="open").length+tpOpenFaults+stOpenFaults,tpTot:transpalets.length,tpOv,stTot:stackers.length,stOv};
   },[data,gS,transpalets,tpChecks,tpFaults,stackers,stChecks,stFaults]);
-
   const Badge=({f})=>{const s=gS(f);if(s.inF)return <span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;if(s.o2||s.o5||s.o20)return <span className="badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;if(s.w2||s.w5||s.w20)return <span className="badge" style={{background:"#f59e0b18",color:"#fbbf24"}}>⏰ Yaklaşıyor</span>;return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;};
-
   const MaintDetail=({type,record,onClose})=>{
     const isTP=type==="tp_monthly";
     const isST=type==="st_monthly";
@@ -669,7 +636,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
         )):<div style={{padding:16,textAlign:"center",color:"var(--dark)",fontSize:13}}>Kayıtlı yapılan iş bulunamadı</div>}
       </div></div></div>);
   };
-
   const DateFilterBar=()=>(
     <div style={{display:'flex',gap:10,marginBottom:10,alignItems:'center',background:'var(--inp)',padding:8,borderRadius:8,flexWrap:'wrap'}}>
       <div style={{fontSize:12,fontWeight:700,color:'var(--dim)'}}>TARİH FİLTRESİ:</div>
@@ -679,7 +645,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       {(dateFilt.start||dateFilt.end)&&<button className="btn btn-ghost btn-xs" onClick={()=>setDateFilt({start:"",end:""})}>Temizle</button>}
     </div>
   );
-
   const filterByDate=(items)=>{
     if(!dateFilt.start&&!dateFilt.end)return items;
     return items.filter(i=>{
@@ -689,7 +654,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       return true;
     });
   };
-
   const FlFilterBar=()=>(
     <div style={{display:'flex',gap:6,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
       <span style={{fontSize:11,color:'var(--mute)',fontWeight:700}}>EKİPMAN:</span>
@@ -711,7 +675,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       ))}
     </div>
   );
-
   const TPRepairModal=()=>tpRepTgt&&(
     <div className="overlay" onClick={()=>setTpRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Transpalet Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setTpRepTgt(null)}>✕</button></div>
@@ -727,7 +690,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
         }}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
-
   const STRepairModal=()=>stRepTgt&&(
     <div className="overlay" onClick={()=>setStRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 İstif Makinesi Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setStRepTgt(null)}>✕</button></div>
@@ -743,7 +705,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
         }}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
-
   const RepairModal=()=>repTgt&&!repTgt.isTP&&!repTgt.isST&&(
     <div className="overlay" onClick={()=>setRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Forklift Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setRepTgt(null)}>✕</button></div>
@@ -756,7 +717,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
         <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{doCloseFault();setRepTgt(null);}}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
-
   const EditEquipmentModal=()=>{
     if(!editFL)return null;
     const isTP=editFL.isTP;
@@ -806,13 +766,11 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
           <button className="btn btn-ghost" onClick={()=>checkPassword(()=>{setEditFL(null);setModal("settings")})}>🔒 Ayarlar</button>
         </div>
       </div>
-
       <div className="g-auto" style={{marginBottom:24}}>
         {[{l:"Forklift",v:stats.tot,c:"var(--blue)"},{l:"Transpalet",v:stats.tpTot,c:"var(--cyan)"},{l:"İstif Mak.",v:stats.stTot,c:"var(--pink)"},{l:"Arızalı",v:stats.ft,c:stats.ft?"var(--red)":"var(--green)"},{l:"Gecikmiş",v:stats.ov,c:stats.ov?"var(--red)":"var(--green)"},{l:"Açık Arıza",v:stats.of,c:stats.of?"var(--red)":"var(--green)"}].map((s,i)=>
           <div key={i} className="card" style={{padding:14,borderLeft:"3px solid "+s.c}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700,textTransform:"uppercase"}}>{s.l}</div><div className="mono" style={{fontSize:26,fontWeight:800,color:s.c,marginTop:2}}>{s.v}</div></div>
         )}
       </div>
-
       <div className="tabs" style={{marginBottom:18,maxWidth:800}}>
         {[{k:"overview",l:"Genel Bakış"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"🔒 Filo Yönetimi"}].map(t=>
           <div key={t.k} className={`tab${sub===t.k?" active":""}`} onClick={()=>{
@@ -820,10 +778,8 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
           }} style={{fontSize:12}}>{t.l}</div>
         )}
       </div>
-
       {(data.forklifts.length>=1||transpalets.length>=1||stackers.length>=1)&&["overview","faults","maint","weekly"].includes(sub)&&<FlFilterBar/>}
       {["faults","maint","weekly"].includes(sub)&&<DateFilterBar/>}
-
       {sub==="overview"&&(()=>{
         const flList=data.forklifts.filter(f=>selFL?f.id===selFL:true);
         const tpList=transpalets.filter(tp=>selFL?tp.id===selFL:true);
@@ -862,7 +818,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
                   </div>
                 </div>
               </div>);})}
-
             {tpList.map(tp=>{const tpS=getTPStatus(tp);return(
               <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
@@ -872,7 +827,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
                   <div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div>
                 </div>
               </div>);})}
-
             {stList.map(st=>{const stS=getSTStatus(st);return(
               <div key={st.id} className="card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
@@ -885,7 +839,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
           </>
         );
       })()}
-
       {sub==="faults"&&(()=>{
         let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
         fs=filterByDate(fs.map(f=>({...f,dt:f.od}))).map(f=>{const{dt,...rest}=f;return rest;});
@@ -896,7 +849,8 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
         const all=[...fs,...tpFs,...stFs].sort((a,b)=>new Date(b.od||b.dt)-new Date(a.od||a.dt));
         if(!all.length)return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
         return all.map(f=><div key={f.id} className="card" style={{marginBottom:8,borderLeft:"3px solid "+(f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)")}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{f.fn}</span>{f.isTP&&<TPBadge/>}{f.isST&&<STBadge/>}<span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span></div><p style={{fontSize:13,marginTop:6,lineHeight:1.5}}>{f.desc}</p><div style={{fontSize:11,color:"var(--mute)",marginTop:6}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b>{(!f.isTP&&!f.isST)&&(" • Saat: "+f.h+"h")} • {fd(f.od||f.dt)}</div>{f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}</div><div style={{display:"flex",flexDirection:"column",gap:4}}>{f.st==="open"&&(!f.isTP&&!f.isST)&&<button className="btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isTP&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isST&&<button className="btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}</div></div></div>);
-      })()}      {sub==="maint"&&<div>
+      })()}
+      {sub==="maint"&&<div>
         {(()=>{
           let rs=[...data.m250,...data.m500,...data.m2000].filter(m=>selFL?m.fid===selFL:true).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
           rs=filterByDate(rs);
@@ -913,7 +867,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
           });
         })()}
       </div>}
-
       {sub==="weekly"&&(()=>{
         let ws=data.weekly.map(w=>({...w,isTP:false,isST:false})).filter(w=>selFL?w.fid===selFL:true);
         let tps=tpChecks.map(c=>({...c,isTP:true,isST:false,fid:c.tpId,fn:transpalets.find(t=>t.id===c.tpId)?.name||"Transpalet",h:0})).filter(c=>selFL?c.fid===selFL:true);
@@ -937,9 +890,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
             </div>
           );
         });
-      })()}
-
-      {sub==="fleet"&&(<div>
+      })()}      {sub==="fleet"&&(<div>
         <div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>
         {!data.forklifts.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Forklift yok.</div>:data.forklifts.map(f=>{
           const fuelType=getFuelType(f.id);
@@ -960,7 +911,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
             </div>
           </div>;
         })}
-
         <div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10,marginTop:20}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>
         {!transpalets.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Transpalet yok.</div>:transpalets.map(tp=>(
           <div key={tp.id} className="card" style={{marginBottom:12}}>
@@ -978,7 +928,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
             </div>
           </div>
         ))}
-
         <div style={{fontSize:13,fontWeight:700,color:"var(--pink)",marginBottom:10,marginTop:20}}>🏗️ İSTİF MAKİNELERİ</div>
         {!stackers.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)"}}>İstif Makinesi yok.</div>:stackers.map(st=>(
           <div key={st.id} className="card" style={{marginBottom:12}}>
@@ -999,7 +948,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       </div>)}
     </div>
   );
-
   const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
     {data.forklifts.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>}
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"forklift://"+f.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setSelTP(null);setSelST(null);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
@@ -1008,7 +956,8 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     {stackers.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--pink)",marginBottom:10}}>🏗️ İSTİF MAKİNELERİ</div>}
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{stackers.map(st=><div key={st.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"stacker://"+st.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{st.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{st.brand} {st.model}</div><div style={{marginTop:4}}><STBadge/></div><div className="mono" style={{fontSize:12,color:"var(--pink)",marginTop:3}}>{st.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelST(st);setSel(null);setSelTP(null);setStTab("status");setPg("mob")}}>Mobil Aç</button></div>)}</div>
     {!data.forklifts.length&&!transpalets.length&&!stackers.length&&<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman yok.</div>}
-  </div>);  const Mobile=()=>{
+  </div>);
+  const Mobile=()=>{
     if(!sel&&!selTP&&!selST){
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
@@ -1030,9 +979,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
           <button className="btn btn-ghost" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setPg("dash");setSel(null);setSelTP(null);setSelST(null)}}>← Ana Panel</button>
         </div>
       );
-    }
-
-    if(sel){
+    }    if(sel){
       const st=gS(sel);
       const fuelType=getFuelType(sel.id);
       const selIsElectric=isElectric(fuelType);
@@ -1043,7 +990,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
             {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"m250",l:"250h"},{k:"m500",l:"500h"},{k:"m2000",l:"2000h"},{k:"wk",l:"Aylık"}].map(t=>
               <div key={t.k} className={`tab${tab===t.k?" active":""}`} onClick={()=>setTab(t.k)}>{t.l}</div>)}
           </div>
-
           {tab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
             <div className="card" style={{borderLeft:"3px solid "+(st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>250 SAAT BAKIM</div>
@@ -1069,7 +1015,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               {st.opn.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}><div style={{fontWeight:600}}>{f.desc}</div><div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.od)}</div></div>)}
             </div>}
           </div>}
-
           {tab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
             <FaultForm sel={sel} onSubmit={handleFaultSubmit} isNoHours={false}/>
             {st.opn.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)"}}>
@@ -1083,14 +1028,14 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               ))}
             </div>}
           </div>}
-
           {tab==="m250"&&<FormTemplate title={"250 SAAT BAKIM"+(selIsElectric?" ⚡":"")} color="var(--amber)" items={getListForType(lists,'m250',fuelType)} onSubmit={handle250} sel={sel}/>}
           {tab==="m500"&&<FormTemplate title={"500 SAAT BAKIM"+(selIsElectric?" ⚡":"")} color="var(--blue)" items={getListForType(lists,'m500',fuelType)} onSubmit={handle500} sel={sel}/>}
           {tab==="m2000"&&<FormTemplate title={"2000 SAAT BAKIM"+(selIsElectric?" ⚡":"")} color="#a855f7" items={getListForType(lists,'m2000',fuelType)} onSubmit={handle2000} sel={sel}/>}
           {tab==="wk"&&<FormTemplate title={"AYLIK KONTROL"+(selIsElectric?" ⚡":"")} color="var(--green)" items={getListForType(lists,'weekly',fuelType)} onSubmit={handleWk} sel={sel}/>}
         </div>
       );
-    }    if(selTP){
+    }
+    if(selTP){
       const tpS=getTPStatus(selTP);
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
@@ -1103,7 +1048,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               <div key={t.k} className={`tab${tpTab===t.k?" active":""}`} onClick={()=>setTpTab(t.k)}>{t.l}</div>
             )}
           </div>
-
           {tpTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
             <div className="card" style={{borderLeft:"3px solid "+(tpS.overdue?"var(--red)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
@@ -1118,7 +1062,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               </div>)}
             </div>}
           </div>}
-
           {tpTab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
             <FaultForm sel={selTP} isNoHours={true} onSubmit={(d)=>submitTPFault(selTP.id,selTP.name,d.by,d.desc,d.prio,d.date)}/>
             {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)"}}>
@@ -1132,9 +1075,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               ))}
             </div>}
           </div>}
-
           {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true}/>}
-
           {tpTab==="history"&&<div>
             {tpS.checks.length>0&&<div style={{marginBottom:14}}>
               <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>AYLIK KONTROLLER</div>
@@ -1161,9 +1102,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
           </div>}
         </div>
       );
-    }
-
-    if(selST){
+    }    if(selST){
       const stS=getSTStatus(selST);
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
@@ -1176,7 +1115,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               <div key={t.k} className={`tab${stTab===t.k?" active":""}`} onClick={()=>setStTab(t.k)}>{t.l}</div>
             )}
           </div>
-
           {stTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
             <div className="card" style={{borderLeft:"3px solid "+(stS.overdue?"var(--red)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
@@ -1191,7 +1129,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               </div>)}
             </div>}
           </div>}
-
           {stTab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
             <FaultForm sel={selST} isNoHours={true} onSubmit={(d)=>submitSTFault(selST.id,selST.name,d.by,d.desc,d.prio,d.date)}/>
             {stS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)"}}>
@@ -1205,9 +1142,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
               ))}
             </div>}
           </div>}
-
           {stTab==="monthly"&&<FormTemplate title="🏗️ İSTİF MAKİNESİ KONTROLÜ" color="var(--pink)" items={lists.st_monthly} onSubmit={handleSTCheck} sel={{hours:0}} noHours={true}/>}
-
           {stTab==="history"&&<div>
             {stS.checks.length>0&&<div style={{marginBottom:14}}>
               <div style={{fontSize:12,fontWeight:700,color:"var(--pink)",marginBottom:8}}>AYLIK KONTROLLER</div>
@@ -1235,7 +1170,8 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
         </div>
       );
     }
-  };  const SettingsModal=()=>(
+  };
+  const SettingsModal=()=>(
     <div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" onClick={e=>e.stopPropagation()}>
       <h3>⚙ Ayarlar</h3>
       <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:15}}>
@@ -1247,7 +1183,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       <div style={{marginTop:20,fontSize:12,color:'var(--dim)',textAlign:'center'}}>Selectron v6.0 — Cloud Sync</div>
     </div></div>
   );
-
   const AddTPModal=()=>(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #06b6d430"}} onClick={e=>e.stopPropagation()}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--cyan)"}}>🔋 Yeni Transpalet Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -1259,7 +1194,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     </div>
     <button className="btn btn-cyan" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addTP}>+ Transpalet Ekle</button>
   </div></div>);
-
   const AddSTModal=()=>(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #ec489930"}} onClick={e=>e.stopPropagation()}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--pink)"}}>🏗️ Yeni İstif Makinesi Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -1271,7 +1205,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     </div>
     <button className="btn btn-pink" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addST}>+ İstif Makinesi Ekle</button>
   </div></div>);
-
   const AddFLModal=()=>{
     return(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #f59e0b30"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--amber)"}}>Yeni Forklift Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
@@ -1290,7 +1223,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
       <button className="btn btn-amber" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addFL}>+ Forklift Ekle</button>
     </div></div>);
   };
-
   return(<div>
     {toast&&<div className="toast">{toast}</div>}
     {loading&&<div className="loading-screen"><div>İşleniyor...</div></div>}
@@ -1311,7 +1243,6 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     {fuelModal&&<FuelTypeModal forklift={fuelModal} onClose={()=>setFuelModal(null)} onSave={()=>fetchData()} currentFuel={getFuelType(fuelModal.id)} sendData={sendData}/>}
   </div>);
 }
-
 ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
 </script>
 </body>
