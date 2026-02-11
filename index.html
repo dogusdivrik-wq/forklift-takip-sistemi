@@ -452,7 +452,9 @@ function App(){
               const newCheck = { id: uid(), tpId: payload.flId, tech: payload.person, dt: payload.date || new Date().toISOString(), notes: payload.note, checksArr: chkStr ? chkStr.split(', ') : [], done: chkStr ? chkStr.split(', ').length : 0 };
               const updated = [...tpChecks, newCheck]; setTpChecks(updated); saveTPChecks(updated);
           }
-          fetchData(); setTab("status"); setModal(null); setRepTgt(null); setSelTP(null);
+          fetchData(); setTab("status"); setModal(null); setRepTgt(null);
+          // Sadece forklift işlemlerinde selTP'yi resetle, transpalet işlemlerinde korur
+          if(!['tp_monthly','tp_fault'].includes(type)) setSelTP(null);
         } else { alert("Hata"); setLoading(false); }
       })
       .catch(e => { setLoading(false); alert("Bağlantı Hatası"); });
@@ -483,11 +485,14 @@ function App(){
   },[]);
 
   useEffect(() => {
-    if(window.autoSelectId && data.forklifts.length > 0) {
-        const f = data.forklifts.find(x => x.id === window.autoSelectId);
-        if(f) { setSel(f); setPg("mob"); window.autoSelectId = null; }
+    if(window.autoSelectId && (data.forklifts.length > 0 || transpalets.length > 0)) {
+        const qid = window.autoSelectId;
+        const f = data.forklifts.find(x => x.id === qid);
+        if(f) { setSel(f); setPg("mob"); window.autoSelectId = null; return; }
+        const tp = transpalets.find(x => x.id === qid);
+        if(tp) { setSelTP(tp); setTpTab("status"); setPg("tp"); window.autoSelectId = null; return; }
     }
-  }, [data]);
+  }, [data, transpalets]);
 
   const showToast=m=>{setToast(m);setTimeout(()=>setToast(null),2e3);};
   
@@ -539,6 +544,7 @@ function App(){
 
   const handleTPCheck = ({tech,hours,notes,chk,date}) => {
       sendData('tp_monthly', {flId: selTP.id, flName: selTP.name, person:tech, hours:0, note:notes, chk, date});
+      setTpTab("status");
   };
 
   const addTP = () => {
@@ -582,6 +588,7 @@ function App(){
       setTpFaults(updated); saveTPFaults(updated);
       // Google Sheets'e de kaydet
       sendData('tp_fault', { flId: tpId, flName: tpName, person: by, hours: 0, note: desc, date });
+      setTpTab("status");
   };
 
   /* Transpalet arıza kapatma */
@@ -637,7 +644,8 @@ function App(){
     let ov=0,wr=0,ft=0;
     data.forklifts.forEach(f=>{const s=gS(f);if(s.inF)ft++;if(s.o2||s.o5||s.o20||s.ow)ov++;else if(s.w2||s.w5||s.w20)wr++;});
     let tpOv=0,tpFt=0; transpalets.forEach(tp=>{const s=getTPStatus(tp);if(s.overdue) tpOv++;if(s.hasFault) tpFt++;});
-    return{tot:data.forklifts.length,ft:ft+tpFt,ov:ov+tpOv,wr,of:data.faults.filter(f=>f.st==="open").length,tpTot:transpalets.length,tpOv};
+    const tpOpenFaults = tpFaults.filter(f=>f.st==='open').length;
+    return{tot:data.forklifts.length,ft:ft+tpFt,ov:ov+tpOv,wr,of:data.faults.filter(f=>f.st==="open").length+tpOpenFaults,tpTot:transpalets.length,tpOv};
   },[data,gS,transpalets,tpChecks]);
 
   const Badge=({f})=>{const s=gS(f);
@@ -759,8 +767,12 @@ function App(){
       {sub==="faults"&&(()=>{
           let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
           fs = filterByDate(fs);
-          if(!fs.length)return<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
-          return fs.map(f=><div key={f.id} className="card" style={{marginBottom:8,borderLeft:`3px solid ${f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)"}`}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{f.fn}</span><span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span></div><p style={{fontSize:13,marginTop:6,lineHeight:1.5}}>{f.desc}</p><div style={{fontSize:11,color:"var(--mute)",marginTop:6}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b> • Saat: {f.h}h • {fd(f.od)}</div></div><div style={{display:"flex",flexDirection:"column",gap:4}}>{f.st==="open"&&<button className="btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}</div></div></div>);
+          /* Transpalet arızalarını da ekle */
+          let tpFs = selFL ? [] : tpFaults.map(f=>({...f, id:f.id, fn:f.tpName, by:f.by, desc:f.desc, od:f.dt, st:f.st, h:0, prio:f.prio||'normal', isTP:true})).sort((a,b)=>new Date(b.od)-new Date(a.od));
+          tpFs = filterByDate(tpFs.map(f=>({...f,dt:f.od})));
+          const all = [...fs, ...tpFs].sort((a,b)=>new Date(b.od)-new Date(a.od));
+          if(!all.length)return<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
+          return all.map(f=><div key={f.id} className="card" style={{marginBottom:8,borderLeft:`3px solid ${f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)"}`}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{f.fn}</span>{f.isTP&&<TPBadge/>}<span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span></div><p style={{fontSize:13,marginTop:6,lineHeight:1.5}}>{f.desc}</p><div style={{fontSize:11,color:"var(--mute)",marginTop:6}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b>{!f.isTP&&(" • Saat: "+f.h+"h")} • {fd(f.od)}</div>{f.isTP&&f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}</div><div style={{display:"flex",flexDirection:"column",gap:4}}>{f.st==="open"&&!f.isTP&&<button className="btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isTP&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}</div></div></div>);
       })()}
 
       {sub==="maint"&&<div>
