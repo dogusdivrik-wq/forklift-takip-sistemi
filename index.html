@@ -801,7 +801,8 @@ function App(){
           return <div key={f.id} className="card" style={{marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <h3 style={{fontSize:16,fontWeight:800}}>{f.name} <FuelBadge fuelType={fuelType}/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></h3>
-            <div style={{display:"flex",gap:6}}>
+           <div style={{display:"flex",gap:6}}>
+                <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...f, isTP:false})}>✏️ Düzenle</button>
                 <button className="btn btn-ghost btn-sm" onClick={()=>setFuelModal(f)}>⛽ Yakıt Tipi</button>
                 <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({type:"forklift",id:f.id,msg:`"${f.name}" sistemden gizlenecek. Devam edilsin mi?`})}>🗑 Sil</button>
             </div>
@@ -820,7 +821,10 @@ function App(){
           <div key={tp.id} className="card" style={{marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <h3 style={{fontSize:16,fontWeight:800}}>{tp.name} <TPBadge/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span></h3>
-              <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({type:"transpalet",id:tp.id,msg:`"${tp.name}" silinecek. Devam edilsin mi?`})}>🗑 Sil</button>
+              <div style={{display:"flex",gap:6}}>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...tp, isTP:true})}>✏️ Düzenle</button>
+                  <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({type:"transpalet",id:tp.id,msg:`"${tp.name}" silinecek. Devam edilsin mi?`})}>🗑 Sil</button>
+              </div>
             </div>
             <div className="g-auto">
               <div><div className="lbl">MARKA</div><div>{tp.brand||"—"}</div></div>
@@ -1029,7 +1033,51 @@ function App(){
   </div>
   </div></div>
   );
+  const EditEquipmentModal = () => {
+    if (!editFL) return null;
+    const isTP = editFL.isTP;
+    const r = { name: useRef(), brand: useRef(), model: useRef(), hours: useRef() };
 
+    const handleSave = () => {
+      const name = r.name.current?.value?.trim();
+      if (!name) return alert("Ad zorunlu.");
+      const brand = r.brand.current?.value?.trim() || "";
+      const model = r.model.current?.value?.trim() || "";
+      const hours = isTP ? 0 : parseFloat(r.hours.current?.value) || 0;
+
+      if (isTP) {
+        sendData('transpalet_register', { flId: editFL.id, flName: name, person: brand, note: model, hours: 0 });
+      } else {
+        sendData('forklift_register', { flId: editFL.id, flName: name, person: brand, note: model, hours: hours });
+      }
+      setEditFL(null);
+    };
+
+    return (
+      <div className="overlay" onClick={() => setEditFL(null)}>
+        <div className="card mbody" style={{border: `1px solid ${isTP ? 'var(--cyan)' : 'var(--amber)'}`}} onClick={e => e.stopPropagation()}>
+          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14}}>
+            <h3 style={{fontSize: 18, fontWeight: 800, color: isTP ? "var(--cyan)" : "var(--amber)"}}>
+              ✏️ {isTP ? 'Transpalet Düzenle' : 'Forklift Düzenle'}
+            </h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => setEditFL(null)}>✕</button>
+          </div>
+          <div className="grid-2">
+            <div><label className="lbl">Ad *</label><input ref={r.name} className="inp" defaultValue={editFL.name}/></div>
+            <div><label className="lbl">Marka</label><input ref={r.brand} className="inp" defaultValue={editFL.brand}/></div>
+            <div><label className="lbl">Model</label><input ref={r.model} className="inp" defaultValue={editFL.model}/></div>
+            {!isTP && <div><label className="lbl">Saat (Güncelle)</label><input ref={r.hours} className="inp" type="number" defaultValue={editFL.hours}/></div>}
+          </div>
+          <div style={{marginTop: 14, fontSize: 11, color: "var(--dim)"}}>
+            Not: Ekipman ID'si ({editFL.id}) aynı kalacak, sadece bilgiler güncellenecektir.
+          </div>
+          <button className={`btn ${isTP ? 'btn-cyan' : 'btn-amber'}`} style={{width: "100%", justifyContent: "center", marginTop: 14}} onClick={handleSave}>
+            💾 Değişiklikleri Kaydet
+          </button>
+        </div>
+      </div>
+    );
+  };
   return(<div>
   {toast&&<div className="toast">{toast}</div>}
   {loading && <div className="loading-screen"><div>İşleniyor...</div></div>}
@@ -1040,6 +1088,7 @@ function App(){
   {modal==="add"&&<AddFLModal/>}
   {modal==="add_tp"&&<AddTPModal/>}
   {modal==="list_edit" && <ListEditor onClose={()=>setModal("settings")} onSave={setLists} />}
+  {editFL && <EditEquipmentModal />}
   <RepairModal/>
   <TPRepairModal/>
   {detailModal&&<MaintDetail type={detailModal.type} record={detailModal.record} onClose={()=>setDetailModal(null)}/>}
