@@ -700,12 +700,22 @@ function App(){
         <div className="dr"><span className="dl">Tarih</span><span className="dv">{fd(record.dt)}</span></div>
         {record.notes&&<div className="dr"><span className="dl">Notlar</span><span className="dv">{record.notes}</span></div>}
       </div>
-      <div style={{fontSize:12,color:"var(--mute)",fontWeight:600,marginBottom:8}}>YAPILAN İŞLER ({doneItems.length} madde)</div>
-      <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:300,overflowY:"auto"}}>
-        {doneItems.length>0?doneItems.map((item,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#22c55e08",borderRadius:6,border:"1px solid #22c55e20"}}><span style={{fontSize:14}}>✅</span><span style={{fontSize:12,color:"var(--text)"}}>{item}</span></div>
-        )):<div style={{padding:16,textAlign:"center",color:"var(--dark)",fontSize:13}}>Kayıtlı yapılan iş bulunamadı</div>}
-      </div></div></div>);
+    {(()=>{
+  const fullList=isTP?lists.tp_monthly:isST?lists.st_monthly:getListForType(lists,type,fuelType);
+  const notDone=fullList?fullList.filter(item=>!doneItems.includes(item)):[];
+  return(<>
+    <div style={{fontSize:12,color:"var(--mute)",fontWeight:600,marginBottom:8}}>KONTROL KALEMLERİ ({doneItems.length}/{doneItems.length+notDone.length})</div>
+    <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:300,overflowY:"auto"}}>
+      {doneItems.map((item,i)=>(
+        <div key={"d"+i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#22c55e08",borderRadius:6,border:"1px solid #22c55e20"}}><span style={{fontSize:14}}>✅</span><span style={{fontSize:12,color:"var(--text)"}}>{item}</span></div>
+      ))}
+      {notDone.map((item,i)=>(
+        <div key={"n"+i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#ef444408",borderRadius:6,border:"1px solid #ef444420"}}><span style={{fontSize:14}}>❌</span><span style={{fontSize:12,color:"var(--dim)"}}>{item}</span></div>
+      ))}
+      {doneItems.length===0&&notDone.length===0&&<div style={{padding:16,textAlign:"center",color:"var(--dark)",fontSize:13}}>Kayıt bulunamadı</div>}
+    </div>
+  </>);
+})()}</div></div>);
   };
   const DateFilterBar=()=>(
     <div style={{display:'flex',gap:10,marginBottom:10,alignItems:'center',background:'var(--inp)',padding:8,borderRadius:8,flexWrap:'wrap'}}>
