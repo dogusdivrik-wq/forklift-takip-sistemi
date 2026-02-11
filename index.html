@@ -766,55 +766,48 @@ function App(){
     const isSmall=isTP||isST;
     const r={name:useRef(),brand:useRef(),model:useRef(),hours:useRef()};
     const handleSave=()=>{
-      const name=r.name.current?.value?.trim();
-      if(!name)return alert("Ad zorunlu.");
-      const brand=r.brand.current?.value?.trim()||"";
-      const model=r.model.current?.value?.trim()||"";
-      const hours=isSmall?0:parseFloat(r.hours.current?.value)||0;
-      if(isTP){sendData('transpalet_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:0});}
-      else if(isST){sendData('stacker_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:0});}
-      else{
-        // Önce forklift_register güncelle
-        const d1=new FormData();
-        d1.append("action","write");
-        d1.append("id",uid());
-        d1.append("type","forklift_register");
-        d1.append("flId",editFL.id);
-        d1      else{
-        // Önce forklift_register güncelle
-        const d1=new FormData();
-        d1.append("action","write");
-        d1.append("id",uid());
-        d1.append("type","forklift_register");
-        d1.append("flId",editFL.id);
-        d1.append("flName",name);
-        d1.append("person",brand);
-        d1.append("hours",hours);
-        d1.append("note",model);
-        d1.append("checks","");
-        setLoading(true);
-        fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d1}).then(r=>r.json()).then(()=>{
-          // hours_override kaydı gönder — filo yönetiminden saat zorla ayarlanır
-          const d2=new FormData();
-          d2.append("action","write");
-          d2.append("id",uid());
-          d2.append("type","hours_override");
-          d2.append("flId",editFL.id);
-          d2.append("flName",name);
-          d2.append("person","admin");
-          d2.append("hours",hours);
-          d2.append("note","Saat manuel güncellendi: "+hours+"h");
-          d2.append("checks","");
-          return fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d2});
-        }).then(r=>r.json()).then(()=>{
-          showToast("Forklift Güncellendi!");
-          fetchData();
-          setEditFL(null);
-        }).catch(()=>{setLoading(false);alert("Hata");});
-        return;
-      }
+  const name=r.name.current?.value?.trim();
+  if(!name)return alert("Ad zorunlu.");
+  const brand=r.brand.current?.value?.trim()||"";
+  const model=r.model.current?.value?.trim()||"";
+  const hours=isSmall?0:parseFloat(r.hours.current?.value)||0;
+  if(isTP){
+    sendData('transpalet_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:0});
+  } else if(isST){
+    sendData('stacker_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:0});
+  } else {
+    const d1=new FormData();
+    d1.append("action","write");
+    d1.append("id",uid());
+    d1.append("type","forklift_register");
+    d1.append("flId",editFL.id);
+    d1.append("flName",name);
+    d1.append("person",brand);
+    d1.append("hours",hours);
+    d1.append("note",model);
+    d1.append("checks","");
+    setLoading(true);
+    fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d1}).then(r=>r.json()).then(()=>{
+      const d2=new FormData();
+      d2.append("action","write");
+      d2.append("id",uid());
+      d2.append("type","hours_override");
+      d2.append("flId",editFL.id);
+      d2.append("flName",name);
+      d2.append("person","admin");
+      d2.append("hours",hours);
+      d2.append("note","Saat manuel güncellendi: "+hours+"h");
+      d2.append("checks","");
+      return fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d2});
+    }).then(r=>r.json()).then(()=>{
+      showToast("Forklift Güncellendi!");
+      fetchData();
       setEditFL(null);
-    };
+    }).catch(()=>{setLoading(false);alert("Hata");});
+    return;
+  }
+  setEditFL(null);
+};
     return(
       <div className="overlay" onClick={()=>setEditFL(null)}>
         <div className="card mbody" style={{border:"1px solid "+(isTP?'var(--cyan)':isST?'var(--pink)':'var(--amber)')}} onClick={e=>e.stopPropagation()}>
