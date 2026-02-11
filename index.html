@@ -8,7 +8,7 @@
 <style>
 /* OPUS DESIGN SYSTEM */
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e1a;--card:#131825;--border:#1e293b;--inp:#0f172a;--text:#e2e8f0;--dim:#94a3b8;--mute:#64748b;--dark:#475569;--amber:#f59e0b;--red:#ef4444;--green:#22c55e;--blue:#3b82f6}
+:root{--bg:#0a0e1a;--card:#131825;--border:#1e293b;--inp:#0f172a;--text:#e2e8f0;--dim:#94a3b8;--mute:#64748b;--dark:#475569;--amber:#f59e0b;--red:#ef4444;--green:#22c55e;--blue:#3b82f6;--cyan:#06b6d4}
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
@@ -16,6 +16,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-
 .btn:active{transform:scale(.97)}
 .btn-amber{background:var(--amber);color:#000}.btn-red{background:var(--red);color:#fff}
 .btn-green{background:var(--green);color:#000}.btn-blue{background:var(--blue);color:#fff}
+.btn-cyan{background:var(--cyan);color:#000}
 .btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
 .btn-sm{padding:6px 10px;font-size:11px;border-radius:6px}
 .btn-xs{padding:4px 8px;font-size:10px;border-radius:5px}
@@ -55,6 +56,7 @@ textarea.inp{resize:vertical;min-height:80px}
 .fuel-badge.gasoline{background:#f59e0b20;color:#fbbf24;border:1px solid #f59e0b30}
 .fuel-badge.lpg{background:#f9731620;color:#fb923c;border:1px solid #f9731630}
 .fuel-badge.hybrid{background:#22c55e20;color:#4ade80;border:1px solid #22c55e30}
+.tp-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#06b6d420;color:#22d3ee;border:1px solid #06b6d430}
 @media(max-width:600px){.grid-2{grid-template-columns:1fr}.g-auto{grid-template-columns:1fr}}
 </style>
 </head>
@@ -81,6 +83,9 @@ const DEF_EM500=["Batarya yoğunluk testi", "Batarya bağlantı kontrolü", "Şa
 const DEF_EM2000=["Batarya kapasite testi", "Batarya komple kontrol", "Elektrik motoru komple bakım", "Motor fırçaları değişimi", "Kontrol ünitesi (controller) bakım", "Hidrolik sistem komple bakım", "Hidrolik pompa kontrolü", "Hidrolik silindir contaları", "Direksiyon sistemi komple", "Fren sistemi komple revizyon", "Ön aks/Arka aks kontrolü", "Asansör zinciri değişimi", "Çatal kontrol/değişim", "Tüm rulmanlar kontrol", "Tüm kablolar ve konnektörler", "Tüm hortum ve kelepçeler", "Kabin/Koruma kafesi kontrol", "Genel test ve kalibrasyon"];
 const DEF_EWCHK=["Çalışma saati", "Batarya su seviyesi", "Batarya şarj durumu", "Hidrolik yağ", "Fren testi", "Direksiyon testi", "Çatallar", "Lastikler", "Aydınlatma", "Korna", "Emniyet kemeri", "Sızıntı kontrolü", "Genel temizlik"];
 
+/* DEFAULT LİSTELER - ELEKTRİKLİ TRANSPALET */
+const DEF_TP_MONTHLY=["Batarya su seviyesi", "Batarya kutup başları temizliği", "Şarj cihazı kontrolü", "Batarya şarj durumu", "Tekerlekler ve rulmanlar", "Çatal durumu ve aşınma", "Hidrolik yağ seviyesi", "Hidrolik sızıntı kontrolü", "Kaldırma/indirme testi", "Kumanda kolu çalışması", "Fren sistemi testi", "Korna ve uyarı sesleri", "Gövde ve şase kontrolü", "Kablo ve konnektör kontrolü", "Genel temizlik"];
+
 const FUELS=[{v:"diesel",l:"Dizel",e:"⛽"},{v:"gasoline",l:"Benzinli",e:"⛽"},{v:"lpg",l:"LPG",e:"🔥"},{v:"electric",l:"Elektrikli",e:"⚡"},{v:"hybrid",l:"Hibrit",e:"🔋"}];
 const PRIO={low:{l:"Düşük",c:"#60a5fa"},normal:{l:"Normal",c:"#fbbf24"},high:{l:"Yüksek",c:"#f97316"},critical:{l:"Kritik",c:"#ef4444"}};
 
@@ -100,9 +105,10 @@ const getSavedLists = () => {
         if(!parsed.em500) parsed.em500 = DEF_EM500;
         if(!parsed.em2000) parsed.em2000 = DEF_EM2000;
         if(!parsed.eweekly) parsed.eweekly = DEF_EWCHK;
+        if(!parsed.tp_monthly) parsed.tp_monthly = DEF_TP_MONTHLY;
         return parsed;
     }
-    return { m250: DEF_M250, m500: DEF_M500, m2000: DEF_M2000, weekly: DEF_WCHK, em250: DEF_EM250, em500: DEF_EM500, em2000: DEF_EM2000, eweekly: DEF_EWCHK };
+    return { m250: DEF_M250, m500: DEF_M500, m2000: DEF_M2000, weekly: DEF_WCHK, em250: DEF_EM250, em500: DEF_EM500, em2000: DEF_EM2000, eweekly: DEF_EWCHK, tp_monthly: DEF_TP_MONTHLY };
 };
 
 /* Yakıt tipi localStorage yönetimi */
@@ -132,6 +138,14 @@ const FuelBadge = ({fuelType}) => {
     return <span className={`fuel-badge ${fuelType}`}>{f.e} {f.l}</span>;
 };
 
+const TPBadge = () => <span className="tp-badge">🔋 Elektrikli Transpalet</span>;
+
+/* Transpalet localStorage yönetimi */
+const getSavedTranspalets = () => JSON.parse(localStorage.getItem("opus_transpalets") || "[]");
+const saveTranspalets = (list) => localStorage.setItem("opus_transpalets", JSON.stringify(list));
+const getSavedTPChecks = () => JSON.parse(localStorage.getItem("opus_tp_checks") || "[]");
+const saveTPChecks = (list) => localStorage.setItem("opus_tp_checks", JSON.stringify(list));
+
 const ChkList=memo(function ChkList({items,chkRef}){
   const [checks,setChecks]=useState({});
   useEffect(()=>{chkRef.current=checks;},[checks]);
@@ -157,37 +171,46 @@ function Confirm({msg,onYes,onNo}){
   </div></div>);
 }
 
-const FormTemplate = ({ title, color, items, onSubmit, sel }) => {
+const FormTemplate = ({ title, color, items, onSubmit, sel, noHours }) => {
     const r={tech:useRef(),hours:useRef(),notes:useRef(),date:useRef()};
     const chkRef=useRef({});
     const today = new Date().toISOString().split('T')[0];
 
     const handle=()=>{
         const tech=r.tech.current.value.trim();
-        const hours=parseFloat(r.hours.current.value);
         const date=r.date.current.value;
-        if(!tech || isNaN(hours) || !date) return alert("İsim, Saat ve Tarih zorunludur!");
-        if(hours < sel.hours) {
-            if(!confirm(`⚠️ UYARI: Girdiğiniz saat (${hours}), forkliftin mevcut saatinden (${sel.hours}) DAHA DÜŞÜK.\n\nBu genelde imkansızdır. Yine de kaydetmek istiyor musunuz?`)) return;
+        if(!tech || !date) return alert("İsim ve Tarih zorunludur!");
+        if(!noHours) {
+            const hours=parseFloat(r.hours.current.value);
+            if(isNaN(hours)) return alert("Saat zorunludur!");
+            if(hours < sel.hours) {
+                if(!confirm(`⚠️ UYARI: Girdiğiniz saat (${hours}), mevcut saatten (${sel.hours}) DAHA DÜŞÜK.\n\nYine de kaydetmek istiyor musunuz?`)) return;
+            }
+            onSubmit({tech, hours, date, notes:r.notes.current.value, chk:chkRef.current});
+        } else {
+            onSubmit({tech, hours:0, date, notes:r.notes.current.value, chk:chkRef.current});
         }
-        onSubmit({tech, hours, date, notes:r.notes.current.value, chk:chkRef.current});
-        r.tech.current.value=""; r.hours.current.value=""; r.notes.current.value="";
+        r.tech.current.value=""; if(!noHours && r.hours.current)r.hours.current.value=""; r.notes.current.value="";
     };
 
     return (<div className="card">
         <h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:color}}>{title}</h3>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
             <div><label className="lbl">Tarih</label><input ref={r.date} type="date" className="inp" defaultValue={today} /></div>
-            <div className="grid-2">
+            {noHours ? (
                 <div><label className="lbl">Personel</label><input ref={r.tech} className="inp" placeholder="Ad Soyad"/></div>
-                <div><label className="lbl">Saat</label><input ref={r.hours} className="inp" type="number" placeholder={sel.hours}/></div>
-            </div>
+            ) : (
+                <div className="grid-2">
+                    <div><label className="lbl">Personel</label><input ref={r.tech} className="inp" placeholder="Ad Soyad"/></div>
+                    <div><label className="lbl">Saat</label><input ref={r.hours} className="inp" type="number" placeholder={sel.hours}/></div>
+                </div>
+            )}
             {items && <>
                 <div style={{fontSize:12,color:"var(--dim)",fontWeight:600,marginTop:5}}>Yapılacak İşler</div>
                 <ChkList items={items} chkRef={chkRef}/>
             </>}
             <div><label className="lbl">Notlar</label><textarea ref={r.notes} className="inp" placeholder="Detaylar..."/></div>
-            <button className="btn" style={{background:color, color:color==='var(--amber)'?'black':'white', width:'100%', justifyContent:'center'}} onClick={handle}>KAYDET</button>
+            <button className="btn" style={{background:color, color:['var(--amber)','var(--green)','var(--cyan)'].includes(color)?'black':'white', width:'100%', justifyContent:'center'}} onClick={handle}>KAYDET</button>
         </div>
     </div>);
 }
@@ -228,40 +251,35 @@ const ListEditor = ({ onClose, onSave }) => {
     const del = (idx) => { setLists({...lists, [activeTab]: currentList.filter((_,i)=>i!==idx)}); };
     const save = () => { localStorage.setItem("opus_lists", JSON.stringify(lists)); onSave(lists); onClose(); };
 
-    const tabDefs = [
-        {k:'m250', l:'250h', icon:'⛽'},
-        {k:'m500', l:'500h', icon:'⛽'},
-        {k:'m2000', l:'2000h', icon:'⛽'},
-        {k:'weekly', l:'Aylık', icon:'⛽'},
-        {k:'em250', l:'250h', icon:'⚡'},
-        {k:'em500', l:'500h', icon:'⚡'},
-        {k:'em2000', l:'2000h', icon:'⚡'},
-        {k:'eweekly', l:'Aylık', icon:'⚡'},
-    ];
-
     return (<div className="overlay" onClick={onClose}><div className="card mbody" onClick={e=>e.stopPropagation()}>
         <h3 style={{marginBottom:6}}>📝 Kontrol Listelerini Düzenle</h3>
         
         {/* Standart Listeler */}
-        <div style={{fontSize:11, color:'var(--mute)', fontWeight:700, marginTop:12, marginBottom:4, letterSpacing:1}}>⛽ STANDART (Dizel/Benzin/LPG/Hibrit)</div>
+        <div style={{fontSize:11, color:'var(--mute)', fontWeight:700, marginTop:12, marginBottom:4, letterSpacing:1}}>⛽ STANDART FORKLİFT (Dizel/Benzin/LPG/Hibrit)</div>
         <div className="tabs" style={{marginBottom:6}}>
-            {tabDefs.filter(t=>!t.k.startsWith('e')).map(t=>(
+            {[{k:'m250',l:'250h'},{k:'m500',l:'500h'},{k:'m2000',l:'2000h'},{k:'weekly',l:'Aylık'}].map(t=>(
                 <div key={t.k} className={`tab ${activeTab===t.k?'active':''}`} onClick={()=>setActiveTab(t.k)}>{t.l}</div>
             ))}
         </div>
 
         {/* Elektrikli Listeler */}
-        <div style={{fontSize:11, color:'#c084fc', fontWeight:700, marginTop:8, marginBottom:4, letterSpacing:1}}>⚡ ELEKTRİKLİ</div>
-        <div className="tabs" style={{marginBottom:10}}>
-            {tabDefs.filter(t=>t.k.startsWith('e')).map(t=>(
+        <div style={{fontSize:11, color:'#c084fc', fontWeight:700, marginTop:8, marginBottom:4, letterSpacing:1}}>⚡ ELEKTRİKLİ FORKLİFT</div>
+        <div className="tabs" style={{marginBottom:6}}>
+            {[{k:'em250',l:'250h'},{k:'em500',l:'500h'},{k:'em2000',l:'2000h'},{k:'eweekly',l:'Aylık'}].map(t=>(
                 <div key={t.k} className={`tab ${activeTab===t.k?'active':''}`} style={activeTab===t.k?{background:'#a855f7',color:'#fff'}:{}} onClick={()=>setActiveTab(t.k)}>{t.l}</div>
             ))}
         </div>
 
+        {/* Transpalet */}
+        <div style={{fontSize:11, color:'#22d3ee', fontWeight:700, marginTop:8, marginBottom:4, letterSpacing:1}}>🔋 ELEKTRİKLİ TRANSPALET</div>
+        <div className="tabs" style={{marginBottom:10}}>
+            <div className={`tab ${activeTab==='tp_monthly'?'active':''}`} style={activeTab==='tp_monthly'?{background:'var(--cyan)',color:'#000'}:{}} onClick={()=>setActiveTab('tp_monthly')}>Aylık Kontrol</div>
+        </div>
+
         {/* Aktif sekme bilgisi */}
-        <div style={{fontSize:12, fontWeight:700, color: activeTab.startsWith('e') ? '#c084fc' : 'var(--amber)', marginBottom:8, display:'flex', alignItems:'center', gap:6}}>
-            <span>{activeTab.startsWith('e') ? '⚡' : '⛽'}</span>
-            <span>{activeTab.startsWith('e') ? 'Elektrikli' : 'Standart'} — {activeTab.replace('e','').replace('weekly','Aylık').replace('m','').replace('250','250 Saat').replace('500','500 Saat').replace('2000','2000 Saat')}</span>
+        <div style={{fontSize:12, fontWeight:700, color: activeTab==='tp_monthly'?'#22d3ee':activeTab.startsWith('e') ? '#c084fc' : 'var(--amber)', marginBottom:8, display:'flex', alignItems:'center', gap:6}}>
+            <span>{activeTab==='tp_monthly'?'🔋':activeTab.startsWith('e') ? '⚡' : '⛽'}</span>
+            <span>{activeTab==='tp_monthly'?'Transpalet — Aylık Kontrol':(activeTab.startsWith('e') ? 'Elektrikli' : 'Standart') + ' — ' + activeTab.replace('e','').replace('weekly','Aylık').replace('m','').replace('250','250 Saat').replace('500','500 Saat').replace('2000','2000 Saat')}</span>
             <span style={{marginLeft:'auto', fontSize:11, color:'var(--dim)'}}>{currentList.length} madde</span>
         </div>
 
@@ -324,9 +342,15 @@ function App(){
   const [deletedIDs, setDeletedIDs] = useState(() => JSON.parse(localStorage.getItem('deleted_fl_ids') || "[]"));
   const [selFL, setSelFL] = useState(null);
   const [fuelModal, setFuelModal] = useState(null);
-  const [fuelRefresh, setFuelRefresh] = useState(0); // Yakıt tipi değişince UI'ı tetiklemek için
+  const [fuelRefresh, setFuelRefresh] = useState(0);
+
+  /* TRANSPALET STATE */
+  const [transpalets, setTranspalets] = useState(getSavedTranspalets());
+  const [tpChecks, setTpChecks] = useState(getSavedTPChecks());
+  const [selTP, setSelTP] = useState(null);
 
   const flRefs={name:useRef(),brand:useRef(),model:useRef(),hours:useRef(),fuel:useRef()};
+  const tpRefs={name:useRef(),brand:useRef(),model:useRef()};
   const rpRefs={by:useRef(),hours:useRef(),desc:useRef(),parts:useRef(),date:useRef()};
 
   const fetchData = () => {
@@ -404,10 +428,13 @@ function App(){
     
     let chkStr = "";
     if(payload.chk) {
-        // Doğru listeyi seç: forklift tipine göre
-        const fuelType = sel ? getFuelType(sel.id) : "diesel";
-        const listArr = getListForType(lists, type, fuelType);
-        chkStr = Object.keys(payload.chk).filter(k=>payload.chk[k]).map(k=>listArr[k]).join(", ");
+        if(type === 'tp_monthly') {
+            chkStr = Object.keys(payload.chk).filter(k=>payload.chk[k]).map(k=>lists.tp_monthly[k]).join(", ");
+        } else {
+            const fuelType = sel ? getFuelType(sel.id) : "diesel";
+            const listArr = getListForType(lists, type, fuelType);
+            chkStr = Object.keys(payload.chk).filter(k=>payload.chk[k]).map(k=>listArr[k]).join(", ");
+        }
     }
     d.append("checks", chkStr);
 
@@ -416,13 +443,35 @@ function App(){
       .then(resp => {
         if(resp.result === "success") {
           showToast("Kaydedildi!");
-          fetchData(); setTab("status"); setModal(null); setRepTgt(null);
+          if(type === 'tp_monthly') {
+              const newCheck = { id: uid(), tpId: payload.flId, tech: payload.person, dt: payload.date || new Date().toISOString(), notes: payload.note, checksArr: chkStr ? chkStr.split(', ') : [], done: chkStr ? chkStr.split(', ').length : 0 };
+              const updated = [...tpChecks, newCheck]; setTpChecks(updated); saveTPChecks(updated);
+          }
+          fetchData(); setTab("status"); setModal(null); setRepTgt(null); setSelTP(null);
         } else { alert("Hata"); setLoading(false); }
       })
       .catch(e => { setLoading(false); alert("Bağlantı Hatası"); });
   };
 
   useEffect(()=>{ fetchData(); 
+    /* Transpalet kayıtlarını da Sheets'ten yükle */
+    fetch(GOOGLE_SCRIPT_URL + "?action=read").then(r=>r.json()).then(resp=>{
+        if(resp.data) {
+            const tpRecs = [];
+            resp.data.forEach(row => {
+                if(row.type === 'tp_monthly') {
+                    const checksArr = (row.checks && row.checks.trim()) ? row.checks.split(',').map(s=>s.trim()).filter(s=>s!=='') : [];
+                    tpRecs.push({ id: row.id, tpId: row.flId, tech: row.person, dt: row.timestamp, notes: row.note, checksArr, done: checksArr.length });
+                }
+            });
+            if(tpRecs.length > 0) {
+                const cur = getSavedTPChecks();
+                const ids = new Set(cur.map(c=>c.id));
+                const merged = [...cur]; tpRecs.forEach(r => { if(!ids.has(r.id)) merged.push(r); });
+                setTpChecks(merged); saveTPChecks(merged);
+            }
+        }
+    }).catch(()=>{}); 
     const p = new URLSearchParams(window.location.search);
     const qid = p.get('id');
     if(qid) setTimeout(() => { window.autoSelectId = qid; }, 2000);
@@ -482,6 +531,39 @@ function App(){
   const handle500=({tech,hours,notes,chk,date})=> sendData('m500', {person:tech, hours, note:notes, chk, date});
   const handle2000=({tech,hours,notes,chk,date})=> sendData('m2000', {person:tech, hours, note:notes, chk, date});
   const handleWk=({tech,hours,notes,chk,date})=> sendData('weekly', {person:tech, hours, note:notes, chk, date});
+
+  const handleTPCheck = ({tech,hours,notes,chk,date}) => {
+      sendData('tp_monthly', {flId: selTP.id, flName: selTP.name, person:tech, hours:0, note:notes, chk, date});
+  };
+
+  const addTP = () => {
+      const name = tpRefs.name.current?.value?.trim(); if(!name) return alert("Ad zorunlu.");
+      const newTP = { id: "TP-"+uid(), name, brand: tpRefs.brand.current?.value?.trim()||"", model: tpRefs.model.current?.value?.trim()||"" };
+      const updated = [...transpalets, newTP];
+      setTranspalets(updated); saveTranspalets(updated);
+      setModal(null); showToast("Transpalet Eklendi!");
+  };
+
+  const deleteTranspalet = (id) => {
+      const updated = transpalets.filter(t => t.id !== id);
+      setTranspalets(updated); saveTranspalets(updated);
+      const updatedChecks = tpChecks.filter(c => c.tpId !== id);
+      setTpChecks(updatedChecks); saveTPChecks(updatedChecks);
+      showToast("Transpalet Silindi");
+  };
+
+  const getTPStatus = useCallback((tp) => {
+      const checks = tpChecks.filter(c => c.tpId === tp.id).sort((a,b) => new Date(b.dt) - new Date(a.dt));
+      const last = checks[0];
+      const dw = last ? Math.floor((Date.now() - new Date(last.dt).getTime()) / 864e5) : 999;
+      return { last, dw, overdue: dw > 30, checks };
+  }, [tpChecks]);
+
+  const TPStatusBadge = ({tp}) => {
+      const s = getTPStatus(tp);
+      if(s.overdue) return <span className="badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;
+      return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;
+  };
   const doCloseFault=()=>{
     const by=rpRefs.by.current?.value?.trim(); if(!by)return alert("İsim gir");
     const date = rpRefs.date.current.value;
@@ -491,8 +573,9 @@ function App(){
   const stats=useMemo(()=>{
     let ov=0,wr=0,ft=0;
     data.forklifts.forEach(f=>{const s=gS(f);if(s.inF)ft++;if(s.o2||s.o5||s.o20||s.ow)ov++;else if(s.w2||s.w5||s.w20)wr++;});
-    return{tot:data.forklifts.length,ft,ov,wr,of:data.faults.filter(f=>f.st==="open").length};
-  },[data,gS]);
+    let tpOv=0; transpalets.forEach(tp=>{if(getTPStatus(tp).overdue) tpOv++;});
+    return{tot:data.forklifts.length,ft,ov:ov+tpOv,wr,of:data.faults.filter(f=>f.st==="open").length,tpTot:transpalets.length,tpOv};
+  },[data,gS,transpalets,tpChecks]);
 
   const Badge=({f})=>{const s=gS(f);
     if(s.inF)return<span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;
@@ -503,15 +586,15 @@ function App(){
 
   const MaintDetail=({type,record,onClose})=>{
     const fuelType = getFuelType(record.fid);
-    const color=type==="m250"?"var(--amber)":type==="m500"?"var(--blue)":type==="m2000"?"#a855f7":"var(--green)";
+    const color=type==="m250"?"var(--amber)":type==="m500"?"var(--blue)":type==="m2000"?"#a855f7":type==="tp_monthly"?"var(--cyan)":"var(--green)";
     const doneItems = record.checksArr || [];
     return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{border:`1px solid ${color}40`}} onClick={e=>e.stopPropagation()}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-    <h3 style={{fontSize:16,fontWeight:700,color}}>{type.toUpperCase()} DETAYI</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
+    <h3 style={{fontSize:16,fontWeight:700,color}}>{type==='tp_monthly'?'TRANSPALET AYLIK KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
     <div style={{marginBottom:12}}>
-    <div className="dr"><span className="dl">Forklift</span><span className="dv" style={{fontWeight:700}}>{record.fn} <FuelBadge fuelType={fuelType}/></span></div>
+    <div className="dr"><span className="dl">{type==='tp_monthly'?'Transpalet':'Forklift'}</span><span className="dv" style={{fontWeight:700}}>{record.fn} {type==='tp_monthly'?<TPBadge/>:<FuelBadge fuelType={fuelType}/>}</span></div>
     <div className="dr"><span className="dl">Personel</span><span className="dv">{record.tech||"—"}</span></div>
-    <div className="dr"><span className="dl">Saat</span><span className="dv mono">{record.h}h</span></div>
+    {type!=='tp_monthly'&&<div className="dr"><span className="dl">Saat</span><span className="dv mono">{record.h}h</span></div>}
     <div className="dr"><span className="dl">Tarih</span><span className="dv">{fd(record.dt)}</span></div>
     {record.notes&&<div className="dr"><span className="dl">Notlar</span><span className="dv">{record.notes}</span></div>}
     </div>
@@ -561,6 +644,7 @@ function App(){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:24}}>
         <div><h1 style={{fontSize:26,fontWeight:900}}><span style={{color:"var(--amber)"}}>⚙</span> Forklift Bakım</h1><p style={{color:"var(--mute)",fontSize:13,marginTop:2}}>Ana Kontrol Paneli</p></div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button className="btn btn-cyan" onClick={()=>{setPg("tp");setSelTP(null)}}>🔋 Transpalet</button>
           <button className="btn btn-amber" onClick={()=>setPg("qr")}>📱 QR</button>
           <button className="btn btn-blue" onClick={()=>{setPg("mob");setSel(null)}}>📋 Mobil Giriş</button>
           <button className="btn btn-ghost" onClick={()=>{setEditFL(null);setModal("settings")}}>⚙ Ayarlar</button>
@@ -568,13 +652,13 @@ function App(){
       </div>
       
       <div className="g-auto" style={{marginBottom:24}}>
-        {[{l:"Toplam",v:stats.tot,c:"var(--blue)"},{l:"Arızalı",v:stats.ft,c:stats.ft?"var(--red)":"var(--green)"},{l:"Gecikmiş",v:stats.ov,c:stats.ov?"var(--red)":"var(--green)"},{l:"Yaklaşan",v:stats.wr,c:stats.wr?"var(--amber)":"var(--green)"},{l:"Açık Arıza",v:stats.of,c:stats.of?"var(--red)":"var(--green)"}].map((s,i)=>
+        {[{l:"Forklift",v:stats.tot,c:"var(--blue)"},{l:"Transpalet",v:stats.tpTot,c:"var(--cyan)"},{l:"Arızalı",v:stats.ft,c:stats.ft?"var(--red)":"var(--green)"},{l:"Gecikmiş",v:stats.ov,c:stats.ov?"var(--red)":"var(--green)"},{l:"Açık Arıza",v:stats.of,c:stats.of?"var(--red)":"var(--green)"}].map((s,i)=>
           <div key={i} className="card" style={{padding:14,borderLeft:`3px solid ${s.c}`}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700,textTransform:"uppercase"}}>{s.l}</div><div className="mono" style={{fontSize:26,fontWeight:800,color:s.c,marginTop:2}}>{s.v}</div></div>
         )}
       </div>
 
-      <div className="tabs" style={{marginBottom:18,maxWidth:700}}>
-        {[{k:"overview",l:"Genel Bakış"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"Filo Yönetimi"}].map(t=>
+      <div className="tabs" style={{marginBottom:18,maxWidth:800}}>
+        {[{k:"overview",l:"Genel Bakış"},{k:"transpalet",l:"🔋 Transpaletler"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"Filo Yönetimi"}].map(t=>
           <div key={t.k} className={`tab${sub===t.k?" active":""}`} onClick={()=>setSub(t.k)} style={{fontSize:12}}>{t.l}</div>
         )}
       </div>
@@ -599,6 +683,15 @@ function App(){
           </div>
         </div>);
       })})()}
+
+      {/* TRANSPALET TAB */}
+      {sub==="transpalet"&&(()=>{
+          if(!transpalets.length) return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Henüz transpalet yok. Ayarlardan ekleyin.</div>;
+          return transpalets.map(tp => { const tpS = getTPStatus(tp); return (
+            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.overdue?"#ef444430":undefined}} onClick={()=>{setPg("tp");setSelTP(tp)}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/><div style={{fontSize:11,color:tpS.overdue?"var(--red)":"var(--dim)",marginTop:3,fontWeight:600}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div>
+            </div>);});
+      })()}
 
       {sub==="faults"&&(()=>{
           let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
@@ -634,7 +727,9 @@ function App(){
           });
       })()}
 
-      {sub==="fleet"&&(!data.forklifts.length?<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Forklift yok.</div>:data.forklifts.map(f=>{
+      {sub==="fleet"&&(<div>
+        <div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>
+        {!data.forklifts.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Forklift yok.</div>:data.forklifts.map(f=>{
           const fuelType = getFuelType(f.id);
           return <div key={f.id} className="card" style={{marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
@@ -651,7 +746,24 @@ function App(){
             <div><div className="lbl">YAKIT TİPİ</div><div><FuelBadge fuelType={fuelType}/></div></div>
           </div>
         </div>;
-      }))}
+        })}
+
+        {/* TRANSPALETLER */}
+        <div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10,marginTop:20}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>
+        {!transpalets.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)"}}>Transpalet yok.</div>:transpalets.map(tp=>(
+          <div key={tp.id} className="card" style={{marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <h3 style={{fontSize:16,fontWeight:800}}>{tp.name} <TPBadge/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span></h3>
+              <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({type:"transpalet",id:tp.id,msg:`"${tp.name}" silinecek. Devam edilsin mi?`})}>🗑 Sil</button>
+            </div>
+            <div className="g-auto">
+              <div><div className="lbl">MARKA</div><div>{tp.brand||"—"}</div></div>
+              <div><div className="lbl">MODEL</div><div>{tp.model||"—"}</div></div>
+              <div><div className="lbl">DURUM</div><div><TPStatusBadge tp={tp}/></div></div>
+            </div>
+          </div>
+        ))}
+      </div>)}
     </div>
   );
 
@@ -720,10 +832,60 @@ function App(){
         <div style={{display:'flex', flexDirection:'column', gap:10, marginTop:15}}>
             <button className="btn btn-blue" onClick={()=>{setModal('list_edit')}}>📝 Kontrol Listelerini Düzenle</button>
             <button className="btn btn-ghost" onClick={()=>{setModal('add')}}>+ Yeni Forklift Ekle</button>
+            <button className="btn btn-cyan" onClick={()=>{setModal('add_tp')}}>+ Yeni Transpalet Ekle</button>
         </div>
-        <div style={{marginTop:20, fontSize:12, color:'var(--dim)', textAlign:'center'}}>Selectron v5.0 (Opus)</div>
+        <div style={{marginTop:20, fontSize:12, color:'var(--dim)', textAlign:'center'}}>Selectron v5.2 (Opus)</div>
       </div></div>
   );
+
+  /* TRANSPALET SAYFASI */
+  const TranspaletPage = () => {
+      if(selTP) {
+          const tpS = getTPStatus(selTP);
+          return (<div style={{maxWidth:420,margin:"0 auto",padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSelTP(null)}>←</button>
+                <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selTP.name}</span><TPBadge/><TPStatusBadge tp={selTP}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selTP.brand,selTP.model].filter(Boolean).join(" • ")}</div></div>
+              </div>
+              <div className="card" style={{borderLeft:`3px solid ${tpS.overdue?"var(--red)":"var(--green)"}`,marginBottom:12}}>
+                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
+                <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+                {tpS.last && <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
+              </div>
+              <FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />
+              {tpS.checks.length > 0 && <div style={{marginTop:14}}>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--mute)",marginBottom:8}}>GEÇMİŞ KONTROLLER</div>
+                {tpS.checks.map(c => (<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
+                  <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
+                </div>))}
+              </div>}
+          </div>);
+      }
+      return (<div style={{maxWidth:500,margin:"0 auto",padding:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div><div style={{fontSize:12,color:"var(--cyan)",fontWeight:700,letterSpacing:2}}>ELEKTRİKLİ TRANSPALET</div><h2 style={{fontSize:20,fontWeight:800,marginTop:4}}>Transpalet Yönetimi</h2></div>
+            <button className="btn btn-ghost" onClick={()=>setPg("dash")}>← Ana Panel</button>
+          </div>
+          {!transpalets.length && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz transpalet yok. Ayarlardan ekleyin.</div>}
+          {transpalets.map(tp => { const tpS = getTPStatus(tp); return (
+            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.overdue?"#ef444430":undefined}} onClick={()=>setSelTP(tp)}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/><div style={{fontSize:11,color:tpS.overdue?"var(--red)":"var(--dim)",marginTop:3,fontWeight:600}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div>
+            </div>);})}
+      </div>);
+  };
+
+  const AddTPModal = () => (<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #06b6d430"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--cyan)"}}>🔋 Yeni Transpalet Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        <div><label className="lbl">Transpalet Adı *</label><input ref={tpRefs.name} className="inp" placeholder="ör: Transpalet 1"/></div>
+        <div className="grid-2">
+          <div><label className="lbl">Marka</label><input ref={tpRefs.brand} className="inp" placeholder="ör: Linde"/></div>
+          <div><label className="lbl">Model</label><input ref={tpRefs.model} className="inp" placeholder="ör: T20"/></div>
+        </div>
+      </div>
+      <button className="btn btn-cyan" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addTP}>+ Transpalet Ekle</button>
+  </div></div>);
 
   const AddFLModal=()=>{
   return(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #f59e0b30"}} onClick={e=>e.stopPropagation()}>
@@ -765,12 +927,14 @@ function App(){
   {pg==="dash"&&<Dash/>}
   {pg==="mob"&&<Mobile/>}
   {pg==="qr"&&<QRPage/>}
+  {pg==="tp"&&<TranspaletPage/>}
   {modal==="settings" && <SettingsModal />}
   {modal==="add"&&<AddFLModal/>}
+  {modal==="add_tp"&&<AddTPModal/>}
   {modal==="list_edit" && <ListEditor onClose={()=>setModal("settings")} onSave={setLists} />}
   <RepairModal/>
   {detailModal&&<MaintDetail type={detailModal.type} record={detailModal.record} onClose={()=>setDetailModal(null)}/>}
-  {confirmDel&&<Confirm msg={confirmDel.msg} onYes={()=>{deleteForklift(confirmDel.id); setConfirmDel(null);}} onNo={()=>setConfirmDel(null)}/>}
+  {confirmDel&&<Confirm msg={confirmDel.msg} onYes={()=>{if(confirmDel.type==="transpalet"){deleteTranspalet(confirmDel.id)}else{deleteForklift(confirmDel.id)} setConfirmDel(null);}} onNo={()=>setConfirmDel(null)}/>}
   {fuelModal&&<FuelTypeModal forklift={fuelModal} onClose={()=>setFuelModal(null)} onSave={()=>{setFuelRefresh(p=>p+1); fetchData();}} />}
   </div>);
 }
