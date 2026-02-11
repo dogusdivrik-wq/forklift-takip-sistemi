@@ -659,6 +659,21 @@ function App(){
       }}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
+const RepairModal = () => repTgt && !repTgt.isTP && !repTgt.isST && (
+      <div className="overlay" onClick={()=>setRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Forklift Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setRepTgt(null)}>✕</button></div>
+      <div style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:12,fontSize:13}}><div style={{fontWeight:700}}>{repTgt.fn}</div><div style={{color:"var(--dim)",marginTop:4}}>{repTgt.desc}</div></div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <div><label className="lbl">Tarih</label><input ref={rpRefs.date} type="date" className="inp" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+      <div><label className="lbl">Tamir Eden *</label><input ref={rpRefs.by} className="inp" placeholder="Teknisyen adı"/></div>
+      <div><label className="lbl">Saat</label><input ref={rpRefs.hours} type="number" className="inp" placeholder="Güncel saat"/></div>
+      <div><label className="lbl">Yapılan İşlemler</label><textarea ref={rpRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
+      <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={() => {
+          doCloseFault();
+          setRepTgt(null);
+      }}>✅ Arızayı Kapat</button>
+      </div></div></div>
+  );
 
   const EditEquipmentModal = () => {
     if (!editFL) return null;
