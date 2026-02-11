@@ -125,8 +125,8 @@ function matchFaultsToRepairs(faultRows,repairRows){
   return result;
 }
 const FuelBadge=({fuelType})=>{const f=gf(fuelType);return <span className={`fuel-badge ${fuelType}`}>{f.e} {f.l}</span>;};
-const TPBadge=()=><span className="tp-badge">🔋 Elektrikli Transpalet</span>;
-const STBadge=()=><span className="st-badge">🏗️ İstif Makinesi</span>;
+const TPBadge=()=><span className={"tp-badge">🔋 Elektrikli Transpalet</span>;
+const STBadge=()=><span className={"st-badge">🏗️ İstif Makinesi</span>;
 const ChkList=memo(function ChkList({items,chkRef}){
   const [checks,setChecks]=useState({});
   useEffect(()=>{chkRef.current=checks;},[checks]);
@@ -144,9 +144,9 @@ function QRCode({data,sz=120}){
   return <img src={url} style={{borderRadius:8,border:'4px solid white'}} width={sz} height={sz} alt="QR"/>;
 }
 function Confirm({msg,onYes,onNo}){
-  return(<div className="overlay" onClick={onNo}><div className="card mbody" style={{maxWidth:380,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+  return(<div className={"overlay" onClick={onNo}><div className={"card mbody" style={{maxWidth:380,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
     <p style={{fontSize:15,marginBottom:16,lineHeight:1.6}}>{msg}</p>
-    <div style={{display:"flex",gap:8,justifyContent:"center"}}><button className="btn btn-red" onClick={onYes}>Evet</button><button className="btn btn-ghost" onClick={onNo}>İptal</button></div>
+    <div style={{display:"flex",gap:8,justifyContent:"center"}}><button className={"btn btn-red" onClick={onYes}>Evet</button><button className={"btn btn-ghost" onClick={onNo}>İptal</button></div>
   </div></div>);
 }
 const FormTemplate=({title,color,items,onSubmit,sel,noHours})=>{
@@ -170,24 +170,24 @@ const FormTemplate=({title,color,items,onSubmit,sel,noHours})=>{
     if(!noHours&&r.hours.current)r.hours.current.value="";
     r.notes.current.value="";
   };
-  return(<div className="card">
+  return(<div className={"card">
     <h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:color}}>{title}</h3>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      <div><label className="lbl">Tarih</label><input ref={r.date} type="date" className="inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
+      <div><label className={"lbl">Tarih</label><input ref={r.date} type="date" className={"inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
       {noHours?(
-        <div><label className="lbl">Personel</label><input ref={r.tech} className="inp" placeholder="Ad Soyad"/></div>
+        <div><label className={"lbl">Personel</label><input ref={r.tech} className={"inp" placeholder="Ad Soyad"/></div>
       ):(
-        <div className="grid-2">
-          <div><label className="lbl">Personel</label><input ref={r.tech} className="inp" placeholder="Ad Soyad"/></div>
-          <div><label className="lbl">Saat</label><input ref={r.hours} className="inp" type="number" placeholder={sel.hours}/></div>
+        <div className={"grid-2">
+          <div><label className={"lbl">Personel</label><input ref={r.tech} className={"inp" placeholder="Ad Soyad"/></div>
+          <div><label className={"lbl">Saat</label><input ref={r.hours} className={"inp" type="number" placeholder={sel.hours}/></div>
         </div>
       )}
       {items&&<>
         <div style={{fontSize:12,color:"var(--dim)",fontWeight:600,marginTop:5}}>Yapılacak İşler</div>
         <ChkList items={items} chkRef={chkRef}/>
       </>}
-      <div><label className="lbl">Notlar</label><textarea ref={r.notes} className="inp" placeholder="Detaylar..."/></div>
-      <button className="btn" style={{background:color,color:['var(--amber)','var(--green)','var(--cyan)','var(--pink)'].includes(color)?'black':'white',width:'100%',justifyContent:'center'}} onClick={handle}>KAYDET</button>
+      <div><label className={"lbl">Notlar</label><textarea ref={r.notes} className={"inp" placeholder="Detaylar..."/></div>
+      <button className={"btn" style={{background:color,color:['var(--amber)','var(--green)','var(--cyan)','var(--pink)'].includes(color)?'black':'white',width:'100%',justifyContent:'center'}} onClick={handle}>KAYDET</button>
     </div>
   </div>);
 };
@@ -206,16 +206,16 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
     r.desc.current.value="";
     r.prio.current.value="normal";
   };
-  return(<div className="card"><h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:"var(--red)"}}>🔴 Arıza Bildirimi</h3>
+  return(<div className={"card"><h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:"var(--red)"}}>🔴 Arıza Bildirimi</h3>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      <div><label className="lbl">Tarih</label><input ref={r.date} type="date" className="inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
-      <div><label className="lbl">Bildiren</label><input ref={r.by} className="inp" placeholder="Ad Soyad"/></div>
-      <div className="grid-2">
-        {!isNoHours&&<div><label className="lbl">Saat</label><input ref={r.hours} className="inp" type="number" placeholder={sel.hours}/></div>}
-        <div><label className="lbl">Öncelik</label><select ref={r.prio} className="inp" defaultValue="normal">{Object.entries(PRIO).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+      <div><label className={"lbl">Tarih</label><input ref={r.date} type="date" className={"inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
+      <div><label className={"lbl">Bildiren</label><input ref={r.by} className={"inp" placeholder="Ad Soyad"/></div>
+      <div className={"grid-2">
+        {!isNoHours&&<div><label className={"lbl">Saat</label><input ref={r.hours} className={"inp" type="number" placeholder={sel.hours}/></div>}
+        <div><label className={"lbl">Öncelik</label><select ref={r.prio} className={"inp" defaultValue="normal">{Object.entries(PRIO).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
       </div>
-      <div><label className="lbl">Açıklama</label><textarea ref={r.desc} className="inp" placeholder="Arıza nedir?"/></div>
-      <button className="btn btn-red" style={{width:"100%",justifyContent:"center"}} onClick={handle}>🔴 Arıza Bildir</button>
+      <div><label className={"lbl">Açıklama</label><textarea ref={r.desc} className={"inp" placeholder="Arıza nedir?"/></div>
+      <button className={"btn btn-red" style={{width:"100%",justifyContent:"center"}} onClick={handle}>🔴 Arıza Bildir</button>
     </div></div>);
 };const ListEditor=({onClose,onSave,lists,sendData})=>{
   const [localLists,setLocalLists]=useState(JSON.parse(JSON.stringify(lists)));
@@ -228,22 +228,22 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
     sendData('list_update',{flId:'SYSTEM',flName:'SYSTEM',person:'admin',hours:0,note:JSON.stringify(localLists)});
     onSave(localLists);onClose();
   };
-  return(<div className="overlay" onClick={onClose}><div className="card mbody" onClick={e=>e.stopPropagation()}>
+  return(<div className={"overlay" onClick={onClose}><div className={"card mbody" onClick={e=>e.stopPropagation()}>
     <h3 style={{marginBottom:6}}>📝 Kontrol Listelerini Düzenle</h3>
     <div style={{fontSize:11,color:'var(--mute)',fontWeight:700,marginTop:12,marginBottom:4,letterSpacing:1}}>⛽ STANDART FORKLİFT (Dizel/Benzin/LPG/Hibrit)</div>
-    <div className="tabs" style={{marginBottom:6}}>
+    <div className={"tabs" style={{marginBottom:6}}>
       {[{k:'m250',l:'250h'},{k:'m500',l:'500h'},{k:'m2000',l:'2000h'},{k:'weekly',l:'Aylık'}].map(t=>(
         <div key={t.k} className={`tab ${activeTab===t.k?'active':''}`} onClick={()=>setActiveTab(t.k)}>{t.l}</div>
       ))}
     </div>
     <div style={{fontSize:11,color:'#c084fc',fontWeight:700,marginTop:8,marginBottom:4,letterSpacing:1}}>⚡ ELEKTRİKLİ FORKLİFT</div>
-    <div className="tabs" style={{marginBottom:6}}>
+    <div className={"tabs" style={{marginBottom:6}}>
       {[{k:'em250',l:'250h'},{k:'em500',l:'500h'},{k:'em2000',l:'2000h'},{k:'eweekly',l:'Aylık'}].map(t=>(
         <div key={t.k} className={`tab ${activeTab===t.k?'active':''}`} style={activeTab===t.k?{background:'#a855f7',color:'#fff'}:{}} onClick={()=>setActiveTab(t.k)}>{t.l}</div>
       ))}
     </div>
     <div style={{fontSize:11,color:'#22d3ee',fontWeight:700,marginTop:8,marginBottom:4,letterSpacing:1}}>🔋 ELEKTRİKLİ KÜÇÜK EKİPMANLAR</div>
-    <div className="tabs" style={{marginBottom:10}}>
+    <div className={"tabs" style={{marginBottom:10}}>
       <div className={`tab ${activeTab==='tp_monthly'?'active':''}`} style={activeTab==='tp_monthly'?{background:'var(--cyan)',color:'#000'}:{}} onClick={()=>setActiveTab('tp_monthly')}>Transpalet</div>
       <div className={`tab ${activeTab==='st_monthly'?'active':''}`} style={activeTab==='st_monthly'?{background:'var(--pink)',color:'#fff'}:{}} onClick={()=>setActiveTab('st_monthly')}>İstif Makinesi</div>
     </div>
@@ -253,14 +253,14 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
       <span style={{marginLeft:'auto',fontSize:11,color:'var(--dim)'}}>{currentList.length} madde</span>
     </div>
     <div style={{display:'flex',gap:5,marginBottom:10}}>
-      <input className="inp" value={newItem} onChange={e=>setNewItem(e.target.value)} placeholder="Yeni madde..." onKeyDown={e=>{if(e.key==='Enter')add()}}/>
-      <button className="btn btn-amber" onClick={add}>+</button>
+      <input className={"inp" value={newItem} onChange={e=>setNewItem(e.target.value)} placeholder="Yeni madde..." onKeyDown={e=>{if(e.key==='Enter')add()}}/>
+      <button className={"btn btn-amber" onClick={add}>+</button>
     </div>
     <div style={{maxHeight:250,overflowY:'auto'}}>
       {currentList.map((it,i)=>(<div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:8,borderBottom:'1px solid #333'}}><span style={{fontSize:13}}>{it}</span><button style={{color:'red',background:'none',border:'none',cursor:'pointer',fontSize:14}} onClick={()=>del(i)}>🗑</button></div>))}
       {currentList.length===0&&<div style={{padding:20,textAlign:'center',color:'var(--dark)',fontSize:13}}>Liste boş. Yukarıdan madde ekleyin.</div>}
     </div>
-    <button className="btn btn-green" style={{width:'100%',marginTop:10,justifyContent:'center'}} onClick={save}>💾 KAYDET VE ÇIK</button>
+    <button className={"btn btn-green" style={{width:'100%',marginTop:10,justifyContent:'center'}} onClick={save}>💾 KAYDET VE ÇIK</button>
   </div></div>);
 };
 const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
@@ -269,10 +269,10 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     sendData('fuel_type_set',{flId:forklift.id,flName:forklift.name,person:'admin',hours:0,note:selected});
     onSave();onClose();
   };
-  return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
+  return(<div className={"overlay" onClick={onClose}><div className={"card mbody" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
       <h3 style={{fontSize:16,fontWeight:700}}>Yakıt Tipi Değiştir</h3>
-      <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+      <button className={"btn btn-ghost btn-sm" onClick={onClose}>✕</button>
     </div>
     <div style={{fontSize:13,color:'var(--dim)',marginBottom:14}}><b style={{color:'var(--text)'}}>{forklift.name}</b> için yakıt tipini seçin</div>
     <div style={{display:'flex',flexDirection:'column',gap:6}}>
@@ -287,7 +287,7 @@ const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
     <div style={{marginTop:14,padding:10,borderRadius:8,background:'#f59e0b10',border:'1px solid #f59e0b20',fontSize:12,color:'var(--amber)'}}>
       ⚠ Yakıt tipi değiştirildiğinde, bakım formlarındaki kontrol listesi otomatik olarak ilgili tipe göre değişecektir.
     </div>
-    <button className="btn btn-green" style={{width:'100%',marginTop:12,justifyContent:'center'}} onClick={save}>💾 Kaydet</button>
+    <button className={"btn btn-green" style={{width:'100%',marginTop:12,justifyContent:'center'}} onClick={save}>💾 Kaydet</button>
   </div></div>);
 };
 function App(){
@@ -344,7 +344,7 @@ function App(){
       .then(resp=>{setLoading(false);if(resp.data)processGoogleData(resp.data);})
       .catch(e=>{setLoading(false);showToast("Bağlantı hatası");});
   };
-    const newData={f  const processGoogleData=(rawData)=>{
+      const processGoogleData=(rawData)=>{
     const newData={forklifts:[],faults:[],m250:[],m500:[],m2000:[],weekly:[]};
     const flMap={};
     const tpMap={};
@@ -648,9 +648,9 @@ function App(){
     return{last,dw,overdue:dw>30,checks,faults,openFaults,hasFault:openFaults.length>0};
   },[stChecks,stFaults]);
   const StatusBadge=({s})=>{
-    if(s.hasFault)return <span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;
-    if(s.overdue)return <span className="badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;
-    return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;
+    if(s.hasFault)return <span className={"badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;
+    if(s.overdue)return <span className={"badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;
+    return <span className={"badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;
   };
   // Fix #2: submitTPFault/submitSTFault flName açıkça geçiriliyor, prio eklendi
   const submitTPFault=(tpId,tpName,by,desc,prio,date)=>{
@@ -688,7 +688,7 @@ function App(){
     const stOpenFaults=stFaults.filter(f=>f.st==='open').length;
     return{tot:data.forklifts.length,ft:ft+tpFt+stFt,ov:ov+tpOv+stOv,wr,of:data.faults.filter(f=>f.st==="open").length+tpOpenFaults+stOpenFaults,tpTot:transpalets.length,tpOv,stTot:stackers.length,stOv};
   },[data,gS,transpalets,tpChecks,tpFaults,stackers,stChecks,stFaults]);
-  const Badge=({f})=>{const s=gS(f);if(s.inF)return <span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;if(s.o2||s.o5||s.o20)return <span className="badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;if(s.w2||s.w5||s.w20)return <span className="badge" style={{background:"#f59e0b18",color:"#fbbf24"}}>⏰ Yaklaşıyor</span>;return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;};
+  const Badge=({f})=>{const s=gS(f);if(s.inF)return <span className={"badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;if(s.o2||s.o5||s.o20)return <span className={"badge" style={{background:"#ef444418",color:"#f87171"}}>⚠ Gecikmiş</span>;if(s.w2||s.w5||s.w20)return <span className={"badge" style={{background:"#f59e0b18",color:"#fbbf24"}}>⏰ Yaklaşıyor</span>;return <span className={"badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;};
   // Fix #4: MaintDetail artık tot kullanmıyor, sadece done gösteriyor
   const MaintDetail=({type,record,onClose})=>{
     const isTP=type==="tp_monthly";
@@ -697,15 +697,15 @@ function App(){
     const fuelType=isSmall?null:getFuelType(record.fid);
     const color=type==="m250"?"var(--amber)":type==="m500"?"var(--blue)":type==="m2000"?"#a855f7":type==="tp_monthly"?"var(--cyan)":type==="st_monthly"?"var(--pink)":"var(--green)";
     const doneItems=record.checksArr||[];
-    return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{border:"1px solid "+color+"40"}} onClick={e=>e.stopPropagation()}>
+    return(<div className={"overlay" onClick={onClose}><div className={"card mbody" style={{border:"1px solid "+color+"40"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <h3 style={{fontSize:16,fontWeight:700,color:color}}>{isTP?'TRANSPALET AYLIK KONTROL DETAYI':isST?'İSTİF MAKİNESİ KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
+        <h3 style={{fontSize:16,fontWeight:700,color:color}}>{isTP?'TRANSPALET AYLIK KONTROL DETAYI':isST?'İSTİF MAKİNESİ KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className={"btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
       <div style={{marginBottom:12}}>
-        <div className="dr"><span className="dl">{isTP?'Transpalet':isST?'İstif Mak.':'Forklift'}</span><span className="dv" style={{fontWeight:700}}>{record.fn} {isTP?<TPBadge/>:isST?<STBadge/>:<FuelBadge fuelType={fuelType}/>}</span></div>
-        <div className="dr"><span className="dl">Personel</span><span className="dv">{record.tech||"—"}</span></div>
-        {!isSmall&&<div className="dr"><span className="dl">Saat</span><span className="dv mono">{record.h}h</span></div>}
-        <div className="dr"><span className="dl">Tarih</span><span className="dv">{fd(record.dt)}</span></div>
-        {record.notes&&<div className="dr"><span className="dl">Notlar</span><span className="dv">{record.notes}</span></div>}
+        <div className={"dr"><span className={"dl">{isTP?'Transpalet':isST?'İstif Mak.':'Forklift'}</span><span className={"dv" style={{fontWeight:700}}>{record.fn} {isTP?<TPBadge/>:isST?<STBadge/>:<FuelBadge fuelType={fuelType}/>}</span></div>
+        <div className={"dr"><span className={"dl">Personel</span><span className={"dv">{record.tech||"—"}</span></div>
+        {!isSmall&&<div className={"dr"><span className={"dl">Saat</span><span className={"dv mono">{record.h}h</span></div>}
+        <div className={"dr"><span className={"dl">Tarih</span><span className={"dv">{fd(record.dt)}</span></div>
+        {record.notes&&<div className={"dr"><span className={"dl">Notlar</span><span className={"dv">{record.notes}</span></div>}
       </div>
       <div style={{fontSize:12,color:"var(--mute)",fontWeight:600,marginBottom:8}}>YAPILAN İŞLER ({doneItems.length} madde)</div>
       <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:300,overflowY:"auto"}}>
@@ -717,10 +717,10 @@ function App(){
   const DateFilterBar=()=>(
     <div style={{display:'flex',gap:10,marginBottom:10,alignItems:'center',background:'var(--inp)',padding:8,borderRadius:8,flexWrap:'wrap'}}>
       <div style={{fontSize:12,fontWeight:700,color:'var(--dim)'}}>TARİH FİLTRESİ:</div>
-      <input type="date" className="inp" value={dateFilt.start} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,start:e.target.value})}/>
+      <input type="date" className={"inp" value={dateFilt.start} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,start:e.target.value})}/>
       <span style={{color:'var(--dim)'}}>-</span>
-      <input type="date" className="inp" value={dateFilt.end} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,end:e.target.value})}/>
-      {(dateFilt.start||dateFilt.end)&&<button className="btn btn-ghost btn-xs" onClick={()=>setDateFilt({start:"",end:""})}>Temizle</button>}
+      <input type="date" className={"inp" value={dateFilt.end} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,end:e.target.value})}/>
+      {(dateFilt.start||dateFilt.end)&&<button className={"btn btn-ghost btn-xs" onClick={()=>setDateFilt({start:"",end:""})}>Temizle</button>}
     </div>
   );
   const filterByDate=(items)=>{
@@ -753,14 +753,14 @@ function App(){
       ))}
     </div>
   );  const TPRepairModal=()=>tpRepTgt&&(
-    <div className="overlay" onClick={()=>setTpRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Transpalet Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setTpRepTgt(null)}>✕</button></div>
+    <div className={"overlay" onClick={()=>setTpRepTgt(null)}><div className={"card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Transpalet Arıza Kapat</h3><button className={"btn btn-ghost btn-sm" onClick={()=>setTpRepTgt(null)}>✕</button></div>
       <div style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:12,fontSize:13}}><div style={{fontWeight:700}}>{tpRepTgt.tpName}</div><div style={{color:"var(--dim)",marginTop:4}}>{tpRepTgt.desc}</div></div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        <div><label className="lbl">Tarih</label><input ref={tpRepRefs.date} type="date" className="inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
-        <div><label className="lbl">Tamir Eden</label><input ref={tpRepRefs.by} className="inp" placeholder="Teknisyen adı"/></div>
-        <div><label className="lbl">Yapılan İşlemler</label><textarea ref={tpRepRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
-        <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
+        <div><label className={"lbl">Tarih</label><input ref={tpRepRefs.date} type="date" className={"inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
+        <div><label className={"lbl">Tamir Eden</label><input ref={tpRepRefs.by} className={"inp" placeholder="Teknisyen adı"/></div>
+        <div><label className={"lbl">Yapılan İşlemler</label><textarea ref={tpRepRefs.desc} className={"inp" placeholder="Tamir detayları..."/></div>
+        <button className={"btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
           const by=tpRepRefs.by.current?.value?.trim();
           if(!by)return alert("İsim gir");
           closeTPFault(tpRepTgt.id,tpRepTgt.tpId,tpRepTgt.tpName,by,tpRepRefs.desc.current?.value,tpRepRefs.date.current?.value);
@@ -768,14 +768,14 @@ function App(){
       </div></div></div>
   );
   const STRepairModal=()=>stRepTgt&&(
-    <div className="overlay" onClick={()=>setStRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 İstif Makinesi Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setStRepTgt(null)}>✕</button></div>
+    <div className={"overlay" onClick={()=>setStRepTgt(null)}><div className={"card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 İstif Makinesi Arıza Kapat</h3><button className={"btn btn-ghost btn-sm" onClick={()=>setStRepTgt(null)}>✕</button></div>
       <div style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:12,fontSize:13}}><div style={{fontWeight:700}}>{stRepTgt.stName}</div><div style={{color:"var(--dim)",marginTop:4}}>{stRepTgt.desc}</div></div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        <div><label className="lbl">Tarih</label><input ref={stRepRefs.date} type="date" className="inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
-        <div><label className="lbl">Tamir Eden</label><input ref={stRepRefs.by} className="inp" placeholder="Teknisyen adı"/></div>
-        <div><label className="lbl">Yapılan İşlemler</label><textarea ref={stRepRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
-        <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
+        <div><label className={"lbl">Tarih</label><input ref={stRepRefs.date} type="date" className={"inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
+        <div><label className={"lbl">Tamir Eden</label><input ref={stRepRefs.by} className={"inp" placeholder="Teknisyen adı"/></div>
+        <div><label className={"lbl">Yapılan İşlemler</label><textarea ref={stRepRefs.desc} className={"inp" placeholder="Tamir detayları..."/></div>
+        <button className={"btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
           const by=stRepRefs.by.current?.value?.trim();
           if(!by)return alert("İsim gir");
           closeSTFault(stRepTgt.id,stRepTgt.stId,stRepTgt.stName,by,stRepRefs.desc.current?.value,stRepRefs.date.current?.value);
@@ -783,15 +783,15 @@ function App(){
       </div></div></div>
   );
   const RepairModal=()=>repTgt&&!repTgt.isTP&&!repTgt.isST&&(
-    <div className="overlay" onClick={()=>setRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Forklift Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setRepTgt(null)}>✕</button></div>
+    <div className={"overlay" onClick={()=>setRepTgt(null)}><div className={"card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Forklift Arıza Kapat</h3><button className={"btn btn-ghost btn-sm" onClick={()=>setRepTgt(null)}>✕</button></div>
       <div style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:12,fontSize:13}}><div style={{fontWeight:700}}>{repTgt.fn}</div><div style={{color:"var(--dim)",marginTop:4}}>{repTgt.desc}</div></div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        <div><label className="lbl">Tarih</label><input ref={rpRefs.date} type="date" className="inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
-        <div><label className="lbl">Tamir Eden</label><input ref={rpRefs.by} className="inp" placeholder="Teknisyen adı"/></div>
-        <div><label className="lbl">Saat</label><input ref={rpRefs.hours} type="number" className="inp" placeholder="Güncel saat"/></div>
-        <div><label className="lbl">Yapılan İşlemler</label><textarea ref={rpRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
-        <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{doCloseFault(repTgt);setRepTgt(null);}}>✅ Arızayı Kapat</button>
+        <div><label className={"lbl">Tarih</label><input ref={rpRefs.date} type="date" className={"inp" defaultValue={TODAY_STR} max={TODAY_STR}/></div>
+        <div><label className={"lbl">Tamir Eden</label><input ref={rpRefs.by} className={"inp" placeholder="Teknisyen adı"/></div>
+        <div><label className={"lbl">Saat</label><input ref={rpRefs.hours} type="number" className={"inp" placeholder="Güncel saat"/></div>
+        <div><label className={"lbl">Yapılan İşlemler</label><textarea ref={rpRefs.desc} className={"inp" placeholder="Tamir detayları..."/></div>
+        <button className={"btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{doCloseFault(repTgt);setRepTgt(null);}}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
   // Fix #13: Düzenleme için _update tipi kullanılıyor (transpalet_update, stacker_update)
@@ -847,19 +847,19 @@ function App(){
       setEditFL(null);
     };
     return(
-      <div className="overlay" onClick={()=>setEditFL(null)}>
-        <div className="card mbody" style={{border:"1px solid "+(isTP?'var(--cyan)':isST?'var(--pink)':'var(--amber)')}} onClick={e=>e.stopPropagation()}>
+      <div className={"overlay" onClick={()=>setEditFL(null)}>
+        <div className={"card mbody" style={{border:"1px solid "+(isTP?'var(--cyan)':isST?'var(--pink)':'var(--amber)')}} onClick={e=>e.stopPropagation()}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <h3 style={{fontSize:18,fontWeight:800,color:isTP?"var(--cyan)":isST?"var(--pink)":"var(--amber)"}}>
               ✏️ {isTP?'Transpalet Düzenle':isST?'İstif Makinesi Düzenle':'Forklift Düzenle'}
             </h3>
-            <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL(null)}>✕</button>
+            <button className={"btn btn-ghost btn-sm" onClick={()=>setEditFL(null)}>✕</button>
           </div>
-          <div className="grid-2">
-            <div><label className="lbl">Ad</label><input ref={nameRef} className="inp" defaultValue={editFL.name}/></div>
-            <div><label className="lbl">Marka</label><input ref={brandRef} className="inp" defaultValue={editFL.brand}/></div>
-            <div><label className="lbl">Model</label><input ref={modelRef} className="inp" defaultValue={editFL.model}/></div>
-            {!isSmall&&<div><label className="lbl">Saat (Güncelle)</label><input ref={hoursRef} className="inp" type="number" defaultValue={editFL.hours}/></div>}
+          <div className={"grid-2">
+            <div><label className={"lbl">Ad</label><input ref={nameRef} className={"inp" defaultValue={editFL.name}/></div>
+            <div><label className={"lbl">Marka</label><input ref={brandRef} className={"inp" defaultValue={editFL.brand}/></div>
+            <div><label className={"lbl">Model</label><input ref={modelRef} className={"inp" defaultValue={editFL.model}/></div>
+            {!isSmall&&<div><label className={"lbl">Saat (Güncelle)</label><input ref={hoursRef} className={"inp" type="number" defaultValue={editFL.hours}/></div>}
           </div>
           {!isSmall&&<div style={{marginTop:10,padding:10,borderRadius:8,background:'#3b82f610',border:'1px solid #3b82f620',fontSize:12,color:'var(--blue)'}}>
             ℹ️ Buradan girilen saat değeri, mevcut saatten düşük olsa bile zorla uygulanır. Bakım ve arıza formlarından girilen düşük saatler ise yoksayılır.
@@ -876,17 +876,17 @@ function App(){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:24}}>
         <div><h1 style={{fontSize:26,fontWeight:900}}><span style={{color:"var(--amber)"}}>⚙</span> Forklift Bakım</h1><p style={{color:"var(--mute)",fontSize:13,marginTop:2}}>Ana Kontrol Paneli</p></div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <button className="btn btn-amber" onClick={()=>setPg("qr")}>📱 QR</button>
-          <button className="btn btn-blue" onClick={()=>{setPg("mob");setSel(null);setSelTP(null);setSelST(null);}}>📋 Mobil Giriş</button>
-          <button className="btn btn-ghost" onClick={()=>checkPassword(()=>{setEditFL(null);setModal("settings")})}>🔒 Ayarlar</button>
+          <button className={"btn btn-amber" onClick={()=>setPg("qr")}>📱 QR</button>
+          <button className={"btn btn-blue" onClick={()=>{setPg("mob");setSel(null);setSelTP(null);setSelST(null);}}>📋 Mobil Giriş</button>
+          <button className={"btn btn-ghost" onClick={()=>checkPassword(()=>{setEditFL(null);setModal("settings")})}>🔒 Ayarlar</button>
         </div>
       </div>
-      <div className="g-auto" style={{marginBottom:24}}>
+      <div className={"g-auto" style={{marginBottom:24}}>
         {[{l:"Forklift",v:stats.tot,c:"var(--blue)"},{l:"Transpalet",v:stats.tpTot,c:"var(--cyan)"},{l:"İstif Mak.",v:stats.stTot,c:"var(--pink)"},{l:"Arızalı",v:stats.ft,c:stats.ft?"var(--red)":"var(--green)"},{l:"Gecikmiş",v:stats.ov,c:stats.ov?"var(--red)":"var(--green)"},{l:"Açık Arıza",v:stats.of,c:stats.of?"var(--red)":"var(--green)"}].map((s,i)=>
-          <div key={i} className="card" style={{padding:14,borderLeft:"3px solid "+s.c}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700,textTransform:"uppercase"}}>{s.l}</div><div className="mono" style={{fontSize:26,fontWeight:800,color:s.c,marginTop:2}}>{s.v}</div></div>
+          <div key={i} className={"card" style={{padding:14,borderLeft:"3px solid "+s.c}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700,textTransform:"uppercase"}}>{s.l}</div><div className={"mono" style={{fontSize:26,fontWeight:800,color:s.c,marginTop:2}}>{s.v}</div></div>
         )}
       </div>
-      <div className="tabs" style={{marginBottom:18,maxWidth:800}}>
+      <div className={"tabs" style={{marginBottom:18,maxWidth:800}}>
         {[{k:"overview",l:"Genel Bakış"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"🔒 Filo Yönetimi"}].map(t=>
           <div key={t.k} className={`tab${sub===t.k?" active":""}`} onClick={()=>{
             if(t.k==="fleet"){checkPassword(()=>setSub(t.k));}else{setSub(t.k);}
@@ -899,56 +899,56 @@ function App(){
         const flList=data.forklifts.filter(f=>selFL?f.id===selFL:true);
         const tpList=transpalets.filter(tp=>selFL?tp.id===selFL:true);
         const stList=stackers.filter(st=>selFL?st.id===selFL:true);
-        if(!flList.length&&!tpList.length&&!stList.length)return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman bulunamadı.</div>;
+        if(!flList.length&&!tpList.length&&!stList.length)return <div className={"card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman bulunamadı.</div>;
         return(
           <>
             {flList.map(f=>{const s=gS(f);const fuelType=getFuelType(f.id);return(
-              <div key={f.id} className="card" style={{marginBottom:12,borderColor:s.inF?"#ef444440":s.o2||s.o5||s.o20?"#f59e0b25":undefined}}>
+              <div key={f.id} className={"card" style={{marginBottom:12,borderColor:s.inF?"#ef444440":s.o2||s.o5||s.o20?"#f59e0b25":undefined}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-                  <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{f.name}</h3><FuelBadge fuelType={fuelType}/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span><Badge f={f}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}><div className="mono" style={{fontSize:22,fontWeight:800,color:"var(--amber)"}}>{f.hours}h</div></div>
+                  <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{f.name}</h3><FuelBadge fuelType={fuelType}/><span className={"mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span><Badge f={f}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><div className={"mono" style={{fontSize:22,fontWeight:800,color:"var(--amber)"}}>{f.hours}h</div></div>
                 </div>
-                <div className="g-auto" style={{marginTop:14}}>
-                  <div className="mcard" style={{borderLeftColor:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}>
+                <div className={"g-auto" style={{marginTop:14}}>
+                  <div className={"mcard" style={{borderLeftColor:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}>
                     <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>250 SAAT</div>
                     <div style={{fontSize:14,fontWeight:700,color:s.o2?"var(--red)":s.w2?"var(--amber)":"#4ade80",marginTop:3}}>{s.o2?Math.abs(s.r2)+"h GECİKMİŞ":s.r2+"h kalan"}</div>
-                    <div className="prog"><div className="pfill" style={{width:Math.min(100,(250-Math.max(0,s.r2))/250*100)+"%",background:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}/></div>
-                    <div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className="mono" style={{color:"var(--text)"}}>{s.n2}h</b>'de</div>
+                    <div className={"prog"><div className={"pfill" style={{width:Math.min(100,(250-Math.max(0,s.r2))/250*100)+"%",background:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}/></div>
+                    <div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className={"mono" style={{color:"var(--text)"}}>{s.n2}h</b>'de</div>
                   </div>
-                  <div className="mcard" style={{borderLeftColor:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}>
+                  <div className={"mcard" style={{borderLeftColor:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}>
                     <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>500 SAAT</div>
                     <div style={{fontSize:14,fontWeight:700,color:s.o5?"var(--red)":s.w5?"var(--amber)":"#4ade80",marginTop:3}}>{s.o5?Math.abs(s.r5)+"h GECİKMİŞ":s.r5+"h kalan"}</div>
-                    <div className="prog"><div className="pfill" style={{width:Math.min(100,(500-Math.max(0,s.r5))/500*100)+"%",background:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}/></div>
-                    <div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className="mono" style={{color:"var(--text)"}}>{s.n5}h</b>'de</div>
+                    <div className={"prog"><div className={"pfill" style={{width:Math.min(100,(500-Math.max(0,s.r5))/500*100)+"%",background:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}/></div>
+                    <div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className={"mono" style={{color:"var(--text)"}}>{s.n5}h</b>'de</div>
                   </div>
-                  <div className="mcard" style={{borderLeftColor:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}>
+                  <div className={"mcard" style={{borderLeftColor:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}>
                     <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>2000 SAAT</div>
                     <div style={{fontSize:14,fontWeight:700,color:s.o20?"var(--red)":s.w20?"var(--amber)":"#4ade80",marginTop:3}}>{s.o20?Math.abs(s.r20)+"h GECİKMİŞ":s.r20+"h kalan"}</div>
-                    <div className="prog"><div className="pfill" style={{width:Math.min(100,(2000-Math.max(0,s.r20))/2000*100)+"%",background:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}/></div>
-                    <div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className="mono" style={{color:"var(--text)"}}>{s.n20}h</b>'de</div>
+                    <div className={"prog"><div className={"pfill" style={{width:Math.min(100,(2000-Math.max(0,s.r20))/2000*100)+"%",background:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}/></div>
+                    <div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className={"mono" style={{color:"var(--text)"}}>{s.n20}h</b>'de</div>
                   </div>
-                  <div className="mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}>
+                  <div className={"mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}>
                     <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK</div>
                     <div style={{fontSize:14,fontWeight:700,color:s.ow?"var(--red)":"#4ade80",marginTop:3}}>{s.ow?s.dw+" gün gecikmiş":s.dw<999?(30-s.dw)+" gün kalan":"Yapılmadı"}</div>
                   </div>
                 </div>
               </div>);})}
             {tpList.map(tp=>{const tpS=getTPStatus(tp);return(
-              <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}>
+              <div key={tp.id} className={"card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-                  <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3><TPBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span><StatusBadge s={tpS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div>
+                  <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3><TPBadge/><span className={"mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span><StatusBadge s={tpS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div>
                 </div>
-                <div className="g-auto" style={{marginTop:14}}>
-                  <div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div>
+                <div className={"g-auto" style={{marginTop:14}}>
+                  <div className={"mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div>
                 </div>
               </div>);})}
             {stList.map(st=>{const stS=getSTStatus(st);return(
-              <div key={st.id} className="card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}>
+              <div key={st.id} className={"card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-                  <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{st.name}</h3><STBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span><StatusBadge s={stS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div></div>
+                  <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{st.name}</h3><STBadge/><span className={"mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span><StatusBadge s={stS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div></div>
                 </div>
-                <div className="g-auto" style={{marginTop:14}}>
-                  <div className="mcard" style={{borderLeftColor:stS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{stS.overdue?stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Yapılmadı"}</div></div>
+                <div className={"g-auto" style={{marginTop:14}}>
+                  <div className={"mcard" style={{borderLeftColor:stS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{stS.overdue?stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Yapılmadı"}</div></div>
                 </div>
               </div>);})}
           </>
@@ -962,24 +962,24 @@ function App(){
         let stFs=stFaults.map(f=>({...f,fn:f.stName,by:f.by,desc:f.desc,od:f.dt,st:f.st,h:0,prio:f.prio||'normal',isST:true})).filter(f=>selFL?f.stId===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
         stFs=filterByDate(stFs.map(f=>({...f,dt:f.od})));
         const all=[...fs,...tpFs,...stFs].sort((a,b)=>new Date(b.od||b.dt)-new Date(a.od||a.dt));
-        if(!all.length)return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
-        return all.map(f=><div key={f.id} className="card" style={{marginBottom:8,borderLeft:"3px solid "+(f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)")}}>
+        if(!all.length)return <div className={"card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
+        return all.map(f=><div key={f.id} className={"card" style={{marginBottom:8,borderLeft:"3px solid "+(f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)")}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
             <div style={{flex:1}}>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                 <span style={{fontWeight:700,fontSize:14}}>{f.fn}</span>
                 {f.isTP&&<TPBadge/>}{f.isST&&<STBadge/>}
-                <span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span>
-                {f.st==="open"&&<span className="badge" style={{background:(PRIO[f.prio]?.c||"#fbbf24")+"20",color:PRIO[f.prio]?.c||"#fbbf24"}}>{PRIO[f.prio]?.l||"Normal"}</span>}
+                <span className={"badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span>
+                {f.st==="open"&&<span className={"badge" style={{background:(PRIO[f.prio]?.c||"#fbbf24")+"20",color:PRIO[f.prio]?.c||"#fbbf24"}}>{PRIO[f.prio]?.l||"Normal"}</span>}
               </div>
               <p style={{fontSize:13,marginTop:6,lineHeight:1.5}}>{f.desc}</p>
               <div style={{fontSize:11,color:"var(--mute)",marginTop:6}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b>{(!f.isTP&&!f.isST)&&(" • Saat: "+f.h+"h")} • {fd(f.od||f.dt)}</div>
               {f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:4}}>
-              {f.st==="open"&&(!f.isTP&&!f.isST)&&<button className="btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}
-              {f.st==="open"&&f.isTP&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
-              {f.st==="open"&&f.isST&&<button className="btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}
+              {f.st==="open"&&(!f.isTP&&!f.isST)&&<button className={"btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}
+              {f.st==="open"&&f.isTP&&<button className={"btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
+              {f.st==="open"&&f.isST&&<button className={"btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}
             </div>
           </div>
         </div>);
@@ -988,23 +988,23 @@ function App(){
         {(()=>{
           let rs=[...data.m250,...data.m500,...data.m2000].filter(m=>selFL?m.fid===selFL:true).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
           rs=filterByDate(rs);
-          if(!rs.length)return <div className="card" style={{textAlign:"center",padding:24,color:"var(--dark)",marginBottom:16}}>Kayıt yok</div>;
+          if(!rs.length)return <div className={"card" style={{textAlign:"center",padding:24,color:"var(--dark)",marginBottom:16}}>Kayıt yok</div>;
           return rs.map(r=>{
             const fuelType=getFuelType(r.fid);
             const type=r.mType||"m250";
             const color=type==="m2000"?"#a855f7":type==="m500"?"var(--blue)":"var(--amber)";
             const colorBg=type==="m2000"?"#a855f720":type==="m500"?"#3b82f620":"#f59e0b20";
             const typeLabel=type==="m2000"?"2000h":type==="m500"?"500h":"250h";
-            return <div key={r.id} className="card" style={{marginBottom:6,borderLeft:"3px solid "+color,cursor:"pointer"}} onClick={()=>setDetailModal({type,record:r})}>
+            return <div key={r.id} className={"card" style={{marginBottom:6,borderLeft:"3px solid "+color,cursor:"pointer"}} onClick={()=>setDetailModal({type,record:r})}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}>
                 <div>
                   <span style={{fontWeight:700}}>{r.fn}</span>
                   {isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>}
-                  <span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>@ {r.h}h</span>
+                  <span className={"mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>@ {r.h}h</span>
                 </div>
                 <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                  <span className="badge" style={{background:colorBg,color:color}}>{typeLabel}</span>
-                  <span className="badge" style={{background:"#22c55e15",color:"#4ade80"}}>{r.done} yapıldı — detay →</span>
+                  <span className={"badge" style={{background:colorBg,color:color}}>{typeLabel}</span>
+                  <span className={"badge" style={{background:"#22c55e15",color:"#4ade80"}}>{r.done} yapıldı — detay →</span>
                 </div>
               </div>
               <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Teknisyen: <b style={{color:"var(--dim)"}}>{r.tech}</b> • {fd(r.dt)}</div>
@@ -1018,18 +1018,18 @@ function App(){
         let sts=stChecks.map(c=>({...c,isST:true,isTP:false,fid:c.stId,fn:stackers.find(s=>s.id===c.stId)?.name||"İstif Makinesi",h:0})).filter(c=>selFL?c.fid===selFL:true);
         let allWs=[...ws,...tps,...sts].sort((a,b)=>new Date(b.dt)-new Date(a.dt));
         allWs=filterByDate(allWs);
-        if(!allWs.length)return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Kayıt yok</div>;
+        if(!allWs.length)return <div className={"card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Kayıt yok</div>;
         return allWs.map(w=>{
           const fuelType=(w.isTP||w.isST)?null:getFuelType(w.fid);
           return(
-            <div key={w.id} className="card" style={{marginBottom:6,borderLeft:"3px solid "+(w.isTP?"var(--cyan)":w.isST?"var(--pink)":"var(--green)"),cursor:"pointer"}} onClick={()=>setDetailModal({type:w.isTP?"tp_monthly":w.isST?"st_monthly":"weekly",record:w})}>
+            <div key={w.id} className={"card" style={{marginBottom:6,borderLeft:"3px solid "+(w.isTP?"var(--cyan)":w.isST?"var(--pink)":"var(--green)"),cursor:"pointer"}} onClick={()=>setDetailModal({type:w.isTP?"tp_monthly":w.isST?"st_monthly":"weekly",record:w})}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}>
                 <div>
                   <span style={{fontWeight:700}}>{w.fn}</span>
                   {w.isTP?<span style={{marginLeft:5}}><TPBadge/></span>:w.isST?<span style={{marginLeft:5}}><STBadge/></span>:(isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>)}
-                  {(!w.isTP&&!w.isST)&&<span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>{w.h}h</span>}
+                  {(!w.isTP&&!w.isST)&&<span className={"mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>{w.h}h</span>}
                 </div>
-                <span className="badge" style={{background:w.isTP?"#06b6d420":w.isST?"#ec489920":"#22c55e20",color:w.isTP?"#22d3ee":w.isST?"#f472b6":"#4ade80"}}>{w.done} yapıldı — detay →</span>
+                <span className={"badge" style={{background:w.isTP?"#06b6d420":w.isST?"#ec489920":"#22c55e20",color:w.isTP?"#22d3ee":w.isST?"#f472b6":"#4ade80"}}>{w.done} yapıldı — detay →</span>
               </div>
               <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>{(w.isTP||w.isST)?"Personel":"Operatör"}: <b style={{color:"var(--dim)"}}>{w.tech}</b> • {fd(w.dt)}</div>
             </div>
@@ -1038,90 +1038,90 @@ function App(){
       })()}
       {sub==="fleet"&&(<div>
         <div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>
-        {!data.forklifts.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Forklift yok.</div>:data.forklifts.map(f=>{
+        {!data.forklifts.length?<div className={"card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Forklift yok.</div>:data.forklifts.map(f=>{
           const fuelType=getFuelType(f.id);
-          return <div key={f.id} className="card" style={{marginBottom:12}}>
+          return <div key={f.id} className={"card" style={{marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <h3 style={{fontSize:16,fontWeight:800}}>{f.name} <FuelBadge fuelType={fuelType}/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></h3>
+              <h3 style={{fontSize:16,fontWeight:800}}>{f.name} <FuelBadge fuelType={fuelType}/> <span className={"mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></h3>
               <div style={{display:"flex",gap:6}}>
-                <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...f,isTP:false,isST:false})}>✏️ Düzenle</button>
-                <button className="btn btn-ghost btn-sm" onClick={()=>setFuelModal(f)}>⛽ Yakıt Tipi</button>
-                <button className="btn btn-dng btn-sm" onClick={()=>deleteEquipment(f.id,"Forklift")}>🗑 Sil</button>
+                <button className={"btn btn-ghost btn-sm" onClick={()=>setEditFL({...f,isTP:false,isST:false})}>✏️ Düzenle</button>
+                <button className={"btn btn-ghost btn-sm" onClick={()=>setFuelModal(f)}>⛽ Yakıt Tipi</button>
+                <button className={"btn btn-dng btn-sm" onClick={()=>deleteEquipment(f.id,"Forklift")}>🗑 Sil</button>
               </div>
             </div>
-            <div className="g-auto">
-              <div><div className="lbl">MARKA</div><div>{f.brand||"—"}</div></div>
-              <div><div className="lbl">MODEL</div><div>{f.model||"—"}</div></div>
-              <div><div className="lbl">SAAT</div><div className="mono" style={{fontWeight:700,color:"var(--amber)"}}>{f.hours}h</div></div>
-              <div><div className="lbl">YAKIT TİPİ</div><div><FuelBadge fuelType={fuelType}/></div></div>
+            <div className={"g-auto">
+              <div><div className={"lbl">MARKA</div><div>{f.brand||"—"}</div></div>
+              <div><div className={"lbl">MODEL</div><div>{f.model||"—"}</div></div>
+              <div><div className={"lbl">SAAT</div><div className={"mono" style={{fontWeight:700,color:"var(--amber)"}}>{f.hours}h</div></div>
+              <div><div className={"lbl">YAKIT TİPİ</div><div><FuelBadge fuelType={fuelType}/></div></div>
             </div>
           </div>;
         })}
         <div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10,marginTop:20}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>
-        {!transpalets.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Transpalet yok.</div>:transpalets.map(tp=>(
-          <div key={tp.id} className="card" style={{marginBottom:12}}>
+        {!transpalets.length?<div className={"card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Transpalet yok.</div>:transpalets.map(tp=>(
+          <div key={tp.id} className={"card" style={{marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <h3 style={{fontSize:16,fontWeight:800}}>{tp.name} <TPBadge/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span></h3>
+              <h3 style={{fontSize:16,fontWeight:800}}>{tp.name} <TPBadge/> <span className={"mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span></h3>
               <div style={{display:"flex",gap:6}}>
-                <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...tp,isTP:true,isST:false})}>✏️ Düzenle</button>
-                <button className="btn btn-dng btn-sm" onClick={()=>deleteEquipment(tp.id,"Transpalet")}>🗑 Sil</button>
+                <button className={"btn btn-ghost btn-sm" onClick={()=>setEditFL({...tp,isTP:true,isST:false})}>✏️ Düzenle</button>
+                <button className={"btn btn-dng btn-sm" onClick={()=>deleteEquipment(tp.id,"Transpalet")}>🗑 Sil</button>
               </div>
             </div>
-            <div className="g-auto">
-              <div><div className="lbl">MARKA</div><div>{tp.brand||"—"}</div></div>
-              <div><div className="lbl">MODEL</div><div>{tp.model||"—"}</div></div>
-              <div><div className="lbl">DURUM</div><div><StatusBadge s={getTPStatus(tp)}/></div></div>
+            <div className={"g-auto">
+              <div><div className={"lbl">MARKA</div><div>{tp.brand||"—"}</div></div>
+              <div><div className={"lbl">MODEL</div><div>{tp.model||"—"}</div></div>
+              <div><div className={"lbl">DURUM</div><div><StatusBadge s={getTPStatus(tp)}/></div></div>
             </div>
           </div>
         ))}
         <div style={{fontSize:13,fontWeight:700,color:"var(--pink)",marginBottom:10,marginTop:20}}>🏗️ İSTİF MAKİNELERİ</div>
-        {!stackers.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)"}}>İstif Makinesi yok.</div>:stackers.map(st=>(
-          <div key={st.id} className="card" style={{marginBottom:12}}>
+        {!stackers.length?<div className={"card" style={{textAlign:"center",padding:20,color:"var(--dark)"}}>İstif Makinesi yok.</div>:stackers.map(st=>(
+          <div key={st.id} className={"card" style={{marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <h3 style={{fontSize:16,fontWeight:800}}>{st.name} <STBadge/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span></h3>
+              <h3 style={{fontSize:16,fontWeight:800}}>{st.name} <STBadge/> <span className={"mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span></h3>
               <div style={{display:"flex",gap:6}}>
-                <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...st,isTP:false,isST:true})}>✏️ Düzenle</button>
-                <button className="btn btn-dng btn-sm" onClick={()=>deleteEquipment(st.id,"İstif Makinesi")}>🗑 Sil</button>
+                <button className={"btn btn-ghost btn-sm" onClick={()=>setEditFL({...st,isTP:false,isST:true})}>✏️ Düzenle</button>
+                <button className={"btn btn-dng btn-sm" onClick={()=>deleteEquipment(st.id,"İstif Makinesi")}>🗑 Sil</button>
               </div>
             </div>
-            <div className="g-auto">
-              <div><div className="lbl">MARKA</div><div>{st.brand||"—"}</div></div>
-              <div><div className="lbl">MODEL</div><div>{st.model||"—"}</div></div>
-              <div><div className="lbl">DURUM</div><div><StatusBadge s={getSTStatus(st)}/></div></div>
+            <div className={"g-auto">
+              <div><div className={"lbl">MARKA</div><div>{st.brand||"—"}</div></div>
+              <div><div className={"lbl">MODEL</div><div>{st.model||"—"}</div></div>
+              <div><div className={"lbl">DURUM</div><div><StatusBadge s={getSTStatus(st)}/></div></div>
             </div>
           </div>
         ))}
       </div>)}
     </div>
   );
-  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
+  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className={"btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
     {data.forklifts.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"forklift://"+f.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setSelTP(null);setSelST(null);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className={"card" style={{textAlign:"center",padding:20}}><QRCode data={"forklift://"+f.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className={"mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className={"btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setSelTP(null);setSelST(null);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
     {transpalets.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{transpalets.map(tp=><div key={tp.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"transpalet://"+tp.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{tp.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{tp.brand} {tp.model}</div><div style={{marginTop:4}}><TPBadge/></div><div className="mono" style={{fontSize:12,color:"var(--cyan)",marginTop:3}}>{tp.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelTP(tp);setSel(null);setSelST(null);setTpTab("status");setPg("mob")}}>Mobil Aç</button></div>)}</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{transpalets.map(tp=><div key={tp.id} className={"card" style={{textAlign:"center",padding:20}}><QRCode data={"transpalet://"+tp.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{tp.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{tp.brand} {tp.model}</div><div style={{marginTop:4}}><TPBadge/></div><div className={"mono" style={{fontSize:12,color:"var(--cyan)",marginTop:3}}>{tp.id}</div><button className={"btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelTP(tp);setSel(null);setSelST(null);setTpTab("status");setPg("mob")}}>Mobil Aç</button></div>)}</div>
     {stackers.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--pink)",marginBottom:10}}>🏗️ İSTİF MAKİNELERİ</div>}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{stackers.map(st=><div key={st.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"stacker://"+st.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{st.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{st.brand} {st.model}</div><div style={{marginTop:4}}><STBadge/></div><div className="mono" style={{fontSize:12,color:"var(--pink)",marginTop:3}}>{st.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelST(st);setSel(null);setSelTP(null);setStTab("status");setPg("mob")}}>Mobil Aç</button></div>)}</div>
-    {!data.forklifts.length&&!transpalets.length&&!stackers.length&&<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman yok.</div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{stackers.map(st=><div key={st.id} className={"card" style={{textAlign:"center",padding:20}}><QRCode data={"stacker://"+st.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{st.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{st.brand} {st.model}</div><div style={{marginTop:4}}><STBadge/></div><div className={"mono" style={{fontSize:12,color:"var(--pink)",marginTop:3}}>{st.id}</div><button className={"btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelST(st);setSel(null);setSelTP(null);setStTab("status");setPg("mob")}}>Mobil Aç</button></div>)}</div>
+    {!data.forklifts.length&&!transpalets.length&&!stackers.length&&<div className={"card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman yok.</div>}
   </div>);  const Mobile=()=>{
     if(!sel&&!selTP&&!selST){
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
           <div style={{textAlign:"center",marginBottom:16}}><div style={{fontSize:12,color:"var(--amber)",fontWeight:700,letterSpacing:2}}>MOBİL GİRİŞ</div><h2 style={{fontSize:20,fontWeight:800,marginTop:4}}>Ekipman Seçin</h2></div>
-          {!data.forklifts.length&&!transpalets.length&&!stackers.length&&<div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz ekipman yok.</div>}
+          {!data.forklifts.length&&!transpalets.length&&!stackers.length&&<div className={"card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz ekipman yok.</div>}
           {data.forklifts.length>0&&<div style={{fontSize:12,fontWeight:700,color:"var(--amber)",marginBottom:8}}>FORKLİFTLER</div>}
-          {data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:gS(f).inF?"#ef444440":undefined}} onClick={()=>{setSel(f);setTab("status")}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:'flex',alignItems:'center',gap:6}}>{f.name} <FuelBadge fuelType={fuelType}/> <span style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></div><div style={{fontSize:12,color:"var(--dim)"}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><div className="mono" style={{fontSize:16,fontWeight:700,color:"var(--amber)"}}>{f.hours}h</div><Badge f={f}/></div></div></div>;})}
+          {data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className={"card" style={{marginBottom:8,cursor:"pointer",borderColor:gS(f).inF?"#ef444440":undefined}} onClick={()=>{setSel(f);setTab("status")}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:'flex',alignItems:'center',gap:6}}>{f.name} <FuelBadge fuelType={fuelType}/> <span style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></div><div style={{fontSize:12,color:"var(--dim)"}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><div className={"mono" style={{fontSize:16,fontWeight:700,color:"var(--amber)"}}>{f.hours}h</div><Badge f={f}/></div></div></div>;})}
           {transpalets.length>0&&<div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8,marginTop:16}}>TRANSPALETLER</div>}
           {transpalets.map(tp=>{const tpS=getTPStatus(tp);return(
-            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#ef444430":undefined}} onClick={()=>{setSelTP(tp);setTpTab("status")}}>
+            <div key={tp.id} className={"card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#ef444430":undefined}} onClick={()=>{setSelTP(tp);setTpTab("status")}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><StatusBadge s={tpS}/></div></div>
             </div>);})}
           {stackers.length>0&&<div style={{fontSize:12,fontWeight:700,color:"var(--pink)",marginBottom:8,marginTop:16}}>İSTİF MAKİNELERİ</div>}
           {stackers.map(st=>{const stS=getSTStatus(st);return(
-            <div key={st.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:stS.hasFault?"#ef444440":stS.overdue?"#ef444430":undefined}} onClick={()=>{setSelST(st);setStTab("status")}}>
+            <div key={st.id} className={"card" style={{marginBottom:8,cursor:"pointer",borderColor:stS.hasFault?"#ef444440":stS.overdue?"#ef444430":undefined}} onClick={()=>{setSelST(st);setStTab("status")}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{st.name} <STBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><StatusBadge s={stS}/></div></div>
             </div>);})}
-          <button className="btn btn-ghost" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setPg("dash");setSel(null);setSelTP(null);setSelST(null)}}>← Ana Panel</button>
+          <button className={"btn btn-ghost" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setPg("dash");setSel(null);setSelTP(null);setSelST(null)}}>← Ana Panel</button>
         </div>
       );
     }
@@ -1131,44 +1131,44 @@ function App(){
       const selIsElectric=isElectric(fuelType);
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSel(null)}>←</button><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{sel.name}</span><FuelBadge fuelType={fuelType}/><Badge f={sel}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[sel.brand,sel.model].filter(Boolean).join(" • ")} • {sel.hours}h</div></div></div>
-          <div className="tabs" style={{marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><button className={"btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSel(null)}>←</button><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{sel.name}</span><FuelBadge fuelType={fuelType}/><Badge f={sel}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[sel.brand,sel.model].filter(Boolean).join(" • ")} • {sel.hours}h</div></div></div>
+          <div className={"tabs" style={{marginBottom:12}}>
             {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"m250",l:"250h"},{k:"m500",l:"500h"},{k:"m2000",l:"2000h"},{k:"wk",l:"Aylık"}].map(t=>
               <div key={t.k} className={`tab${tab===t.k?" active":""}`} onClick={()=>setTab(t.k)}>{t.l}</div>)}
           </div>
           {tab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-            <div className="card" style={{borderLeft:"3px solid "+(st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)")}}>
+            <div className={"card" style={{borderLeft:"3px solid "+(st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>250 SAAT BAKIM</div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o2?"var(--red)":st.w2?"var(--amber)":"#4ade80"}}>{st.o2?Math.abs(st.r2)+"h":st.r2+"h"}</div><div style={{fontSize:11,color:st.o2?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o2?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l2h}h<br/>Sonraki: {st.n2}h</div></div>
-              <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(250-Math.max(0,st.r2))/250*100))+"%",background:st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)"}}/></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className={"mono" style={{fontSize:22,fontWeight:800,color:st.o2?"var(--red)":st.w2?"var(--amber)":"#4ade80"}}>{st.o2?Math.abs(st.r2)+"h":st.r2+"h"}</div><div style={{fontSize:11,color:st.o2?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o2?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l2h}h<br/>Sonraki: {st.n2}h</div></div>
+              <div className={"prog"><div className={"pfill" style={{width:Math.min(100,Math.max(0,(250-Math.max(0,st.r2))/250*100))+"%",background:st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)"}}/></div>
             </div>
-            <div className="card" style={{borderLeft:"3px solid "+(st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)")}}>
+            <div className={"card" style={{borderLeft:"3px solid "+(st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>500 SAAT BAKIM</div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o5?"var(--red)":st.w5?"var(--amber)":"#4ade80"}}>{st.o5?Math.abs(st.r5)+"h":st.r5+"h"}</div><div style={{fontSize:11,color:st.o5?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o5?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l5h}h<br/>Sonraki: {st.n5}h</div></div>
-              <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(500-Math.max(0,st.r5))/500*100))+"%",background:st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)"}}/></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className={"mono" style={{fontSize:22,fontWeight:800,color:st.o5?"var(--red)":st.w5?"var(--amber)":"#4ade80"}}>{st.o5?Math.abs(st.r5)+"h":st.r5+"h"}</div><div style={{fontSize:11,color:st.o5?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o5?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l5h}h<br/>Sonraki: {st.n5}h</div></div>
+              <div className={"prog"><div className={"pfill" style={{width:Math.min(100,Math.max(0,(500-Math.max(0,st.r5))/500*100))+"%",background:st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)"}}/></div>
             </div>
-            <div className="card" style={{borderLeft:"3px solid "+(st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)")}}>
+            <div className={"card" style={{borderLeft:"3px solid "+(st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>2000 SAAT BAKIM</div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o20?"var(--red)":st.w20?"var(--amber)":"#4ade80"}}>{st.o20?Math.abs(st.r20)+"h":st.r20+"h"}</div><div style={{fontSize:11,color:st.o20?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o20?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l20h}h<br/>Sonraki: {st.n20}h</div></div>
-              <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(2000-Math.max(0,st.r20))/2000*100))+"%",background:st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}}/></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className={"mono" style={{fontSize:22,fontWeight:800,color:st.o20?"var(--red)":st.w20?"var(--amber)":"#4ade80"}}>{st.o20?Math.abs(st.r20)+"h":st.r20+"h"}</div><div style={{fontSize:11,color:st.o20?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o20?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l20h}h<br/>Sonraki: {st.n20}h</div></div>
+              <div className={"prog"><div className={"pfill" style={{width:Math.min(100,Math.max(0,(2000-Math.max(0,st.r20))/2000*100))+"%",background:st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}}/></div>
             </div>
-            <div className="card" style={{borderLeft:"3px solid "+(st.ow?"var(--red)":"var(--green)")}}>
+            <div className={"card" style={{borderLeft:"3px solid "+(st.ow?"var(--red)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
               <div style={{fontSize:14,fontWeight:700,color:st.ow?"var(--red)":"#4ade80",marginTop:3}}>{st.ow?"⚠ "+st.dw+" gün gecikmiş":st.dw<999?(30-st.dw)+" gün kalan":"Henüz yapılmadı"}</div>
             </div>
-            {st.opn.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
+            {st.opn.length>0&&<div className={"card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
               <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({st.opn.length})</div>
               {st.opn.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}><div style={{fontWeight:600}}>{f.desc}</div><div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.od)}</div></div>)}
             </div>}
           </div>}
           {tab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
             <FaultForm sel={sel} onSubmit={handleFaultSubmit} isNoHours={false}/>
-            {st.opn.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)"}}>
+            {st.opn.length>0&&<div className={"card" style={{borderLeft:"3px solid var(--red)"}}>
               <h3 style={{fontSize:15,fontWeight:700,color:"var(--red)",marginBottom:10}}>🔴 Açık Arızalar</h3>
               {st.opn.map(f=>(
                 <div key={f.id} style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:8}}>
                   <div style={{fontWeight:600,fontSize:13}}>{f.desc}</div>                  <div style={{color:"var(--mute)",fontSize:11,marginTop:4,marginBottom:8}}>Bildiren: {f.by} • {fd(f.od)}</div>
-                  <button className="btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setRepTgt(f)}>🔧 Arızayı Kapat</button>
+                  <button className={"btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setRepTgt(f)}>🔧 Arızayı Kapat</button>
                 </div>
               ))}
             </div>}
@@ -1185,21 +1185,21 @@ function App(){
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-            <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelTP(null);setTpTab("status")}}>←</button>
+            <button className={"btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelTP(null);setTpTab("status")}}>←</button>
             <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selTP.name}</span><TPBadge/><StatusBadge s={tpS}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selTP.brand,selTP.model].filter(Boolean).join(" • ")}</div></div>
           </div>
-          <div className="tabs" style={{marginBottom:12}}>
+          <div className={"tabs" style={{marginBottom:12}}>
             {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Geçmiş"}].map(t=>
               <div key={t.k} className={`tab${tpTab===t.k?" active":""}`} onClick={()=>setTpTab(t.k)}>{t.l}</div>
             )}
           </div>
           {tpTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-            <div className="card" style={{borderLeft:"3px solid "+(tpS.overdue?"var(--red)":"var(--green)")}}>
+            <div className={"card" style={{borderLeft:"3px solid "+(tpS.overdue?"var(--red)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
               <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
               {tpS.last&&<div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
             </div>
-            {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
+            {tpS.openFaults.length>0&&<div className={"card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
               <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({tpS.openFaults.length})</div>
               {tpS.openFaults.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}>
                 <div style={{fontWeight:600}}>{f.desc}</div>
@@ -1209,13 +1209,13 @@ function App(){
           </div>}
           {tpTab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
             <FaultForm sel={selTP} isNoHours={true} onSubmit={(d)=>submitTPFault(selTP.id,selTP.name,d.by,d.desc,d.prio,d.date)}/>
-            {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)"}}>
+            {tpS.openFaults.length>0&&<div className={"card" style={{borderLeft:"3px solid var(--red)"}}>
               <h3 style={{fontSize:15,fontWeight:700,color:"var(--red)",marginBottom:10}}>🔴 Açık Arızalar</h3>
               {tpS.openFaults.map(f=>(
                 <div key={f.id} style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:8}}>
                   <div style={{fontWeight:600,fontSize:13}}>{f.desc}</div>
                   <div style={{color:"var(--mute)",fontSize:11,marginTop:4,marginBottom:8}}>Bildiren: {f.by} • {fd(f.dt)}</div>
-                  <button className="btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setTpRepTgt(f)}>🔧 Arızayı Kapat</button>
+                  <button className={"btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setTpRepTgt(f)}>🔧 Arızayı Kapat</button>
                 </div>
               ))}
             </div>}
@@ -1224,26 +1224,26 @@ function App(){
           {tpTab==="history"&&<div>
             {tpS.checks.length>0&&<div style={{marginBottom:14}}>
               <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>AYLIK KONTROLLER</div>
-              {tpS.checks.map(c=>(<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
+              {tpS.checks.map(c=>(<div key={c.id} className={"card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className={"badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
                 <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
               </div>))}
             </div>}
             {tpS.faults.length>0&&<div>
               <div style={{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:8}}>ARIZA KAYITLARI</div>
-              {tpS.faults.map(f=>(<div key={f.id} className="card" style={{marginBottom:6,borderLeft:"3px solid "+(f.st==='open'?'var(--red)':'var(--green)')}}>
+              {tpS.faults.map(f=>(<div key={f.id} className={"card" style={{marginBottom:6,borderLeft:"3px solid "+(f.st==='open'?'var(--red)':'var(--green)')}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
                   <div style={{flex:1}}>
-                    <span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"KAPALI ✅"}</span>
+                    <span className={"badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"KAPALI ✅"}</span>
                     <p style={{fontSize:13,marginTop:4,lineHeight:1.5}}>{f.desc}</p>
                     <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b> • {fd(f.dt)}</div>
                     {f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}
                   </div>
-                  {f.st==="open"&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
+                  {f.st==="open"&&<button className={"btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
                 </div>
               </div>))}
             </div>}
-            {tpS.checks.length===0&&tpS.faults.length===0&&<div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
+            {tpS.checks.length===0&&tpS.faults.length===0&&<div className={"card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
           </div>}
         </div>
       );
@@ -1253,21 +1253,21 @@ function App(){
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-            <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelST(null);setStTab("status")}}>←</button>
+            <button className={"btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelST(null);setStTab("status")}}>←</button>
             <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selST.name}</span><STBadge/><StatusBadge s={stS}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selST.brand,selST.model].filter(Boolean).join(" • ")}</div></div>
           </div>
-          <div className="tabs" style={{marginBottom:12}}>
+          <div className={"tabs" style={{marginBottom:12}}>
             {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Geçmiş"}].map(t=>
               <div key={t.k} className={`tab${stTab===t.k?" active":""}`} onClick={()=>setStTab(t.k)}>{t.l}</div>
             )}
           </div>
           {stTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-            <div className="card" style={{borderLeft:"3px solid "+(stS.overdue?"var(--red)":"var(--green)")}}>
+            <div className={"card" style={{borderLeft:"3px solid "+(stS.overdue?"var(--red)":"var(--green)")}}>
               <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
               <div style={{fontSize:16,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{stS.overdue?"⚠ "+stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
               {stS.last&&<div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(stS.last.dt)} — {stS.last.tech}</div>}
             </div>
-            {stS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
+            {stS.openFaults.length>0&&<div className={"card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
               <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({stS.openFaults.length})</div>
               {stS.openFaults.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}>
                 <div style={{fontWeight:600}}>{f.desc}</div>
@@ -1277,13 +1277,13 @@ function App(){
           </div>}
           {stTab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
             <FaultForm sel={selST} isNoHours={true} onSubmit={(d)=>submitSTFault(selST.id,selST.name,d.by,d.desc,d.prio,d.date)}/>
-            {stS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)"}}>
+            {stS.openFaults.length>0&&<div className={"card" style={{borderLeft:"3px solid var(--red)"}}>
               <h3 style={{fontSize:15,fontWeight:700,color:"var(--red)",marginBottom:10}}>🔴 Açık Arızalar</h3>
               {stS.openFaults.map(f=>(
                 <div key={f.id} style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:8}}>
                   <div style={{fontWeight:600,fontSize:13}}>{f.desc}</div>
                   <div style={{color:"var(--mute)",fontSize:11,marginTop:4,marginBottom:8}}>Bildiren: {f.by} • {fd(f.dt)}</div>
-                  <button className="btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setStRepTgt(f)}>🔧 Arızayı Kapat</button>
+                  <button className={"btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setStRepTgt(f)}>🔧 Arızayı Kapat</button>
                 </div>
               ))}
             </div>}
@@ -1292,86 +1292,86 @@ function App(){
           {stTab==="history"&&<div>
             {stS.checks.length>0&&<div style={{marginBottom:14}}>
               <div style={{fontSize:12,fontWeight:700,color:"var(--pink)",marginBottom:8}}>AYLIK KONTROLLER</div>
-              {stS.checks.map(c=>(<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--pink)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"st_monthly",record:{...c,fn:selST.name}})}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#ec489920",color:"#f472b6"}}>{c.done} yapıldı — detay →</span></div>
+              {stS.checks.map(c=>(<div key={c.id} className={"card" style={{marginBottom:6,borderLeft:"3px solid var(--pink)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"st_monthly",record:{...c,fn:selST.name}})}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className={"badge" style={{background:"#ec489920",color:"#f472b6"}}>{c.done} yapıldı — detay →</span></div>
                 <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
               </div>))}
             </div>}
             {stS.faults.length>0&&<div>
               <div style={{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:8}}>ARIZA KAYITLARI</div>
-              {stS.faults.map(f=>(<div key={f.id} className="card" style={{marginBottom:6,borderLeft:"3px solid "+(f.st==='open'?'var(--red)':'var(--green)')}}>
+              {stS.faults.map(f=>(<div key={f.id} className={"card" style={{marginBottom:6,borderLeft:"3px solid "+(f.st==='open'?'var(--red)':'var(--green)')}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
                   <div style={{flex:1}}>
-                    <span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"KAPALI ✅"}</span>
+                    <span className={"badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"KAPALI ✅"}</span>
                     <p style={{fontSize:13,marginTop:4,lineHeight:1.5}}>{f.desc}</p>
                     <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b> • {fd(f.dt)}</div>
                     {f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}
                   </div>
-                  {f.st==="open"&&<button className="btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}
+                  {f.st==="open"&&<button className={"btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}
                 </div>
               </div>))}
             </div>}
-            {stS.checks.length===0&&stS.faults.length===0&&<div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
+            {stS.checks.length===0&&stS.faults.length===0&&<div className={"card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
           </div>}
         </div>
       );
     }
   };
   const SettingsModal=()=>(
-    <div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" onClick={e=>e.stopPropagation()}>
+    <div className={"overlay" onClick={()=>setModal(null)}><div className={"card mbody" onClick={e=>e.stopPropagation()}>
       <h3>⚙ Ayarlar</h3>
       <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:15}}>
-        <button className="btn btn-blue" onClick={()=>{setModal('list_edit')}}>📝 Kontrol listelerini düzenle</button>
-        <button className="btn btn-ghost" onClick={()=>{setModal('add')}}>+ Yeni Forklift Ekle</button>
-        <button className="btn btn-cyan" onClick={()=>{setModal('add_tp')}}>+ Yeni Transpalet Ekle</button>
-        <button className="btn btn-pink" onClick={()=>{setModal('add_st')}}>+ Yeni İstif Makinesi Ekle</button>
+        <button className={"btn btn-blue" onClick={()=>{setModal('list_edit')}}>📝 Kontrol listelerini düzenle</button>
+        <button className={"btn btn-ghost" onClick={()=>{setModal('add')}}>+ Yeni Forklift Ekle</button>
+        <button className={"btn btn-cyan" onClick={()=>{setModal('add_tp')}}>+ Yeni Transpalet Ekle</button>
+        <button className={"btn btn-pink" onClick={()=>{setModal('add_st')}}>+ Yeni İstif Makinesi Ekle</button>
       </div>
       <div style={{marginTop:20,fontSize:12,color:'var(--dim)',textAlign:'center'}}>Selectron v6.1 — Cloud Sync</div>
     </div></div>
   );
-  const AddTPModal=()=>(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #06b6d430"}} onClick={e=>e.stopPropagation()}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--cyan)"}}>🔋 Yeni Transpalet Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
+  const AddTPModal=()=>(<div className={"overlay" onClick={()=>setModal(null)}><div className={"card mbody" style={{border:"1px solid #06b6d430"}} onClick={e=>e.stopPropagation()}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--cyan)"}}>🔋 Yeni Transpalet Ekle</h3><button className={"btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      <div><label className="lbl">Transpalet Adı *</label><input ref={tpRefs.name} className="inp" placeholder="ör: Transpalet 1"/></div>
-      <div className="grid-2">
-        <div><label className="lbl">Marka</label><input ref={tpRefs.brand} className="inp" placeholder="ör: Linde"/></div>
-        <div><label className="lbl">Model</label><input ref={tpRefs.model} className="inp" placeholder="ör: T20"/></div>
+      <div><label className={"lbl">Transpalet Adı *</label><input ref={tpRefs.name} className={"inp" placeholder="ör: Transpalet 1"/></div>
+      <div className={"grid-2">
+        <div><label className={"lbl">Marka</label><input ref={tpRefs.brand} className={"inp" placeholder="ör: Linde"/></div>
+        <div><label className={"lbl">Model</label><input ref={tpRefs.model} className={"inp" placeholder="ör: T20"/></div>
       </div>
     </div>
-    <button className="btn btn-cyan" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addTP}>+ Transpalet Ekle</button>
+    <button className={"btn btn-cyan" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addTP}>+ Transpalet Ekle</button>
   </div></div>);
-  const AddSTModal=()=>(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #ec489930"}} onClick={e=>e.stopPropagation()}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--pink)"}}>🏗️ Yeni İstif Makinesi Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
+  const AddSTModal=()=>(<div className={"overlay" onClick={()=>setModal(null)}><div className={"card mbody" style={{border:"1px solid #ec489930"}} onClick={e=>e.stopPropagation()}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--pink)"}}>🏗️ Yeni İstif Makinesi Ekle</h3><button className={"btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      <div><label className="lbl">Makine Adı *</label><input ref={stRefs.name} className="inp" placeholder="ör: İstif 1"/></div>
-      <div className="grid-2">
-        <div><label className="lbl">Marka</label><input ref={stRefs.brand} className="inp" placeholder="ör: Jungheinrich"/></div>
-        <div><label className="lbl">Model</label><input ref={stRefs.model} className="inp" placeholder="ör: EJC"/></div>
+      <div><label className={"lbl">Makine Adı *</label><input ref={stRefs.name} className={"inp" placeholder="ör: İstif 1"/></div>
+      <div className={"grid-2">
+        <div><label className={"lbl">Marka</label><input ref={stRefs.brand} className={"inp" placeholder="ör: Jungheinrich"/></div>
+        <div><label className={"lbl">Model</label><input ref={stRefs.model} className={"inp" placeholder="ör: EJC"/></div>
       </div>
     </div>
-    <button className="btn btn-pink" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addST}>+ İstif Makinesi Ekle</button>
+    <button className={"btn btn-pink" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addST}>+ İstif Makinesi Ekle</button>
   </div></div>);
   const AddFLModal=()=>{
-    return(<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #f59e0b30"}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--amber)"}}>Yeni Forklift Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
-      <div className="grid-2">
-        <div><label className="lbl">Forklift Adı *</label><input ref={flRefs.name} className="inp" placeholder="ör: Forklift 1"/></div>
-        <div><label className="lbl">Marka</label><input ref={flRefs.brand} className="inp" placeholder="ör: Toyota"/></div>
-        <div><label className="lbl">Model</label><input ref={flRefs.model} className="inp" placeholder="ör: 8FG25"/></div>
-        <div><label className="lbl">Mevcut Saat</label><input ref={flRefs.hours} className="inp" type="number" placeholder="0"/></div>
+    return(<div className={"overlay" onClick={()=>setModal(null)}><div className={"card mbody" style={{border:"1px solid #f59e0b30"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--amber)"}}>Yeni Forklift Ekle</h3><button className={"btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
+      <div className={"grid-2">
+        <div><label className={"lbl">Forklift Adı *</label><input ref={flRefs.name} className={"inp" placeholder="ör: Forklift 1"/></div>
+        <div><label className={"lbl">Marka</label><input ref={flRefs.brand} className={"inp" placeholder="ör: Toyota"/></div>
+        <div><label className={"lbl">Model</label><input ref={flRefs.model} className={"inp" placeholder="ör: 8FG25"/></div>
+        <div><label className={"lbl">Mevcut Saat</label><input ref={flRefs.hours} className={"inp" type="number" placeholder="0"/></div>
       </div>
       <div style={{marginTop:10}}>
-        <label className="lbl">Yakıt Tipi</label>
-        <select ref={flRefs.fuel} className="inp" defaultValue="diesel">
+        <label className={"lbl">Yakıt Tipi</label>
+        <select ref={flRefs.fuel} className={"inp" defaultValue="diesel">
           {FUELS.map(f=><option key={f.v} value={f.v}>{f.e} {f.l}</option>)}
         </select>
       </div>
-      <button className="btn btn-amber" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addFL}>+ Forklift Ekle</button>
+      <button className={"btn btn-amber" style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={addFL}>+ Forklift Ekle</button>
     </div></div>);
   };
   return(<div>
-    {toast&&<div className="toast">{toast}</div>}
-    {loading&&<div className="loading-screen"><div>İşleniyor...</div></div>}
+    {toast&&<div className={"toast">{toast}</div>}
+    {loading&&<div className={"loading-screen"><div>İşleniyor...</div></div>}
     {pg==="dash"&&<Dash/>}
     {pg==="mob"&&<Mobile/>}
     {pg==="qr"&&<QRPage/>}
