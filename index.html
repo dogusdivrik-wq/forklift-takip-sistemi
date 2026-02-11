@@ -338,12 +338,12 @@ function App(){
     else if(pw!==null){alert("Yanlış şifre!");}
   };
   const getFuelType=(flId)=>fuelTypes[flId]||"diesel";
-  const fetchData=()=>{
-    setLoading(true);
+  const fetchData=(silent)=>{
+    if(!silent)setLoading(true);
     fetch(GOOGLE_SCRIPT_URL+"?action=read")
       .then(r=>r.json())
-      .then(resp=>{setLoading(false);if(resp.data)processGoogleData(resp.data);})
-      .catch(e=>{setLoading(false);showToast("Bağlantı hatası");});
+      .then(resp=>{if(!silent)setLoading(false);if(resp.data)processGoogleData(resp.data);})
+      .catch(e=>{if(!silent)setLoading(false);if(!silent)showToast("Bağlantı hatası");});
   };
   const processGoogleData=(rawData)=>{
     const newData={forklifts:[],faults:[],m250:[],m500:[],m2000:[],weekly:[]};
@@ -535,7 +535,7 @@ function App(){
     const p=new URLSearchParams(window.location.search);
     const qid=p.get('id');
     if(qid)window.autoSelectId=qid;
-    const interval=setInterval(fetchData,60000);
+    const interval=setInterval(()=>fetchData(true),60000);
     return ()=>clearInterval(interval);
   },[]);
   useEffect(()=>{
@@ -1018,7 +1018,7 @@ function App(){
               <div style={{display:"flex",gap:6}}>
                 <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...f,isTP:false,isST:false})}>✏️ Düzenle</button>
                 <button className="btn btn-ghost btn-sm" onClick={()=>setFuelModal(f)}>⛽ Yakıt Tipi</button>
-                <button className="btn btn-dng btn-sm" onClick={()=>deleteEquipment(f.id,"Forklift")}>🗑 Sil</button>
+                <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({id:f.id,type:"Forklift",msg:f.name+" silinecek. Emin misiniz?"})}>🗑 Sil</button>
               </div>
             </div>
             <div className="g-auto">
@@ -1036,7 +1036,7 @@ function App(){
               <h3 style={{fontSize:16,fontWeight:800}}>{tp.name} <TPBadge/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span></h3>
               <div style={{display:"flex",gap:6}}>
                 <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...tp,isTP:true,isST:false})}>✏️ Düzenle</button>
-                <button className="btn btn-dng btn-sm" onClick={()=>deleteEquipment(tp.id,"Transpalet")}>🗑 Sil</button>
+                <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({id:tp.id,type:"Transpalet",msg:tp.name+" silinecek. Emin misiniz?"})}>🗑 Sil</button>
               </div>
             </div>
             <div className="g-auto">
@@ -1053,7 +1053,7 @@ function App(){
               <h3 style={{fontSize:16,fontWeight:800}}>{st.name} <STBadge/> <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span></h3>
               <div style={{display:"flex",gap:6}}>
                 <button className="btn btn-ghost btn-sm" onClick={()=>setEditFL({...st,isTP:false,isST:true})}>✏️ Düzenle</button>
-                <button className="btn btn-dng btn-sm" onClick={()=>deleteEquipment(st.id,"İstif Makinesi")}>🗑 Sil</button>
+                <button className="btn btn-dng btn-sm" onClick={()=>setConfirmDel({id:st.id,type:"İstif Makinesi",msg:st.name+" silinecek. Emin misiniz?"})}>🗑 Sil</button>
               </div>
             </div>
             <div className="g-auto">
