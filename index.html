@@ -743,7 +743,7 @@ function App(){
       {sub==="faults"&&(()=>{
           let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
           fs = filterByDate(fs);
-          let tpFs = selFL ? [] : tpFaults.map(f=>({...f, id:f.id, fn:f.tpName, by:f.by, desc:f.desc, od:f.dt, st:f.st, h:0, prio:f.prio||'normal', isTP:true})).sort((a,b)=>new Date(b.od)-new Date(a.od));
+          let tpFs = tpFaults.map(f=>({...f, id:f.id, fn:f.tpName, by:f.by, desc:f.desc, od:f.dt, st:f.st, h:0, prio:f.prio||'normal', isTP:true})).filter(f=>selFL?f.tpId===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
           tpFs = filterByDate(tpFs.map(f=>({...f,dt:f.od})));
           const all = [...fs, ...tpFs].sort((a,b)=>new Date(b.od)-new Date(a.od));
           if(!all.length)return<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
