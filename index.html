@@ -1101,7 +1101,19 @@ const RepairModal = () => repTgt && !repTgt.isTP && !repTgt.isST && (
                 {st.opn.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}><div style={{fontWeight:600}}>{f.desc}</div><div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.od)}</div></div>)}
             </div>}
         </div>}
-        {tab==="fault"&&<FaultForm sel={sel} onSubmit={handleFaultSubmit} isNoHours={false} />}
+        {tab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <FaultForm sel={sel} onSubmit={handleFaultSubmit} isNoHours={false} />
+            {st.opn.length > 0 && <div className="card" style={{borderLeft:"3px solid var(--red)"}}>
+                <h3 style={{fontSize:15,fontWeight:700,color:"var(--red)",marginBottom:10}}>🔴 Açık Arızalar</h3>
+                {st.opn.map(f => (
+                    <div key={f.id} style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:8}}>
+                        <div style={{fontWeight:600,fontSize:13}}>{f.desc}</div>
+                        <div style={{color:"var(--mute)",fontSize:11,marginTop:4,marginBottom:8}}>Bildiren: {f.by} • {fd(f.od)}</div>
+                        <button className="btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setRepTgt(f)}>🔧 Arızayı Kapat</button>
+                    </div>
+                ))}
+            </div>}
+        </div>}
         {tab==="m250"&&<FormTemplate title={`250 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="var(--amber)" items={getListForType(lists,'m250',fuelType)} onSubmit={handle250} sel={sel}/>}
         {tab==="m500"&&<FormTemplate title={`500 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="var(--blue)" items={getListForType(lists,'m500',fuelType)} onSubmit={handle500} sel={sel}/>}
         {tab==="m2000"&&<FormTemplate title={`2000 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="#a855f7" items={getListForType(lists,'m2000',fuelType)} onSubmit={handle2000} sel={sel}/>}
@@ -1140,7 +1152,19 @@ const RepairModal = () => repTgt && !repTgt.isTP && !repTgt.isST && (
                 </div>}
             </div>}
 
-            {tpTab==="fault"&&<FaultForm sel={selTP} onSubmit={handleTPCheck} isNoHours={true} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} />}
+           {tpTab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <FaultForm sel={selTP} isNoHours={true} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} />
+            {tpS.openFaults.length > 0 && <div className="card" style={{borderLeft:"3px solid var(--red)"}}>
+                <h3 style={{fontSize:15,fontWeight:700,color:"var(--red)",marginBottom:10}}>🔴 Açık Arızalar</h3>
+                {tpS.openFaults.map(f => (
+                    <div key={f.id} style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:8}}>
+                        <div style={{fontWeight:600,fontSize:13}}>{f.desc}</div>
+                        <div style={{color:"var(--mute)",fontSize:11,marginTop:4,marginBottom:8}}>Bildiren: {f.by} • {fd(f.dt)}</div>
+                        <button className="btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setTpRepTgt(f)}>🔧 Arızayı Kapat</button>
+                    </div>
+                ))}
+            </div>}
+        </div>}
             
             {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />}
             
@@ -1202,7 +1226,19 @@ const RepairModal = () => repTgt && !repTgt.isTP && !repTgt.isST && (
                 </div>}
             </div>}
 
-            {stTab==="fault"&&<FaultForm sel={selST} onSubmit={handleSTCheck} isNoHours={true} onSubmit={(data)=>submitSTFault(selST.id, selST.name, data.by, data.desc, data.prio, data.date)} />}
+            {stTab==="fault"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <FaultForm sel={selST} isNoHours={true} onSubmit={(data)=>submitSTFault(selST.id, selST.name, data.by, data.desc, data.prio, data.date)} />
+            {stS.openFaults.length > 0 && <div className="card" style={{borderLeft:"3px solid var(--red)"}}>
+                <h3 style={{fontSize:15,fontWeight:700,color:"var(--red)",marginBottom:10}}>🔴 Açık Arızalar</h3>
+                {stS.openFaults.map(f => (
+                    <div key={f.id} style={{padding:10,background:"var(--inp)",borderRadius:8,marginBottom:8}}>
+                        <div style={{fontWeight:600,fontSize:13}}>{f.desc}</div>
+                        <div style={{color:"var(--mute)",fontSize:11,marginTop:4,marginBottom:8}}>Bildiren: {f.by} • {fd(f.dt)}</div>
+                        <button className="btn btn-green btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setStRepTgt(f)}>🔧 Arızayı Kapat</button>
+                    </div>
+                ))}
+            </div>}
+        </div>}
             
             {stTab==="monthly"&&<FormTemplate title="🏗️ İSTİF MAKİNESİ KONTROLÜ" color="var(--pink)" items={lists.st_monthly} onSubmit={handleSTCheck} sel={{hours:0}} noHours={true} />}
             
