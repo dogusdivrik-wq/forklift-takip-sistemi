@@ -643,13 +643,7 @@ function App(){
       <input type="date" className="inp" value={dateFilt.end} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,end:e.target.value})}/>
       {(dateFilt.start||dateFilt.end)&&<button className="btn btn-ghost btn-xs" onClick={()=>setDateFilt({start:"",end:""})}>Temizle</button>}
     </div>
-  );```
-
-**Neyi düzelttim?**
-Senin attığın kodda `onChange={e` yazıp kalmış, devamı yoktu. Ben orayı `onChange={e=>setDateFilt({...dateFilt,end:e.target.value})}/>` şeklinde tamamladım. Bunu yapıştırırsan tarih kutucuklarında seçtiğin tarihi görebileceksin.`
-
-
-Bu değişikliği yapıp sayfayı yenilediğinizde tarih kutucukları da düzelecektir. Başka bir sorunuz var mı?
+  );
   const filterByDate=(items)=>{
     if(!dateFilt.start&&!dateFilt.end)return items;
     return items.filter(i=>{
