@@ -14,8 +14,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-
 .btn{padding:10px 16px;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
 .btn:active{transform:scale(.97)}
 .btn-amber{background:var(--amber);color:#000}.btn-red{background:var(--red);color:#fff}
-.btn-green{background:var(--green);color:#000}.btn-blue{background:var(--blue);color:#fff}
-.btn-cyan{background:var(--cyan);color:#000}.btn-pink{background:var(--pink);color:#fff}
+.btn-green{background:var(--green);color:#000}.btn-blue{background:var(--blue);color:#fff}.btn-cyan{background:var(--cyan);color:#000}.btn-pink{background:var(--pink);color:#fff}
 .btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
 .btn-sm{padding:6px 10px;font-size:11px;border-radius:6px}
 .btn-xs{padding:4px 8px;font-size:10px;border-radius:5px}
@@ -93,17 +92,27 @@ const getListForType=(lists,maintType,fuelType)=>{
     case 'weekly':return elc?lists.eweekly:lists.weekly;
     default:return[];
   }
-};
-function matchFaultsToRepairs(faultRows,repairRows){
+};function matchFaultsToRepairs(faultRows,repairRows){
   const sf=[...faultRows].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
   const sr=[...repairRows].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
   const used=new Set();
   const result={};
+  // Önce direkt faultId eşleşmesi olan repair'ları bul
   sf.forEach(fault=>{
+    for(let i=0;i<sr.length;i++){
+      if(used.has(i))continue;
+      if(sr[i].faultId===fault.id&&sr[i].flId===fault.flId){
+        result[fault.id]=sr[i];used.add(i);break;
+      }
+    }
+  });
+  // Sonra eşleşmemiş fault'lar için eski kronolojik mantık (geriye uyumluluk)
+  sf.forEach(fault=>{
+    if(result[fault.id])return;
     let matched=null;
     for(let i=0;i<sr.length;i++){
       if(used.has(i))continue;
-      if(sr[i].flId===fault.flId&&new Date(sr[i].timestamp)>new Date(fault.timestamp)){
+      if(sr[i].flId===fault.flId&&!sr[i].faultId&&new Date(sr[i].timestamp)>new Date(fault.timestamp)){
         matched=sr[i];used.add(i);break;
       }
     }
@@ -284,6 +293,7 @@ function App(){
   const [lists,setLists]=useState(DEFAULT_LISTS);
   const [fuelTypes,setFuelTypes]=useState({});
   const [deletedIDs,setDeletedIDs]=useState([]);
+  const [hoursOverrides,setHoursOverrides]=useState({});
   const [pg,setPg]=useState("dash");
   const [sub,setSub]=useState("overview");
   const [sel,setSel]=useState(null);
@@ -342,11 +352,18 @@ function App(){
     const stFaultsList=[];
     const ftMap={};
     const delIDs=[];
+    const hoMap={};
     let latestLists=null;
     let latestListsTime=0;
     rawData.forEach(row=>{
       if(row.type==='fuel_type_set'){ftMap[row.flId]=row.note;}
       if(row.type==='equipment_delete'){if(!delIDs.includes(row.flId))delIDs.push(row.flId);}
+      if(row.type==='hours_override'){
+        const prev=hoMap[row.flId];
+        if(!prev||new Date(row.timestamp)>new Date(prev.timestamp)){
+          hoMap[row.flId]=row;
+        }
+      }
       if(row.type==='list_update'){
         const t=new Date(row.timestamp).getTime();
         if(t>latestListsTime){latestListsTime=t;try{latestLists=JSON.parse(row.note);}catch(e){}}
@@ -354,6 +371,7 @@ function App(){
     });
     setFuelTypes(ftMap);
     setDeletedIDs(delIDs);
+    setHoursOverrides(hoMap);
     const currentLists=latestLists||DEFAULT_LISTS;
     const mergedLists={...DEFAULT_LISTS,...currentLists};
     setLists(mergedLists);
@@ -364,6 +382,10 @@ function App(){
     const faultRows=rawData.filter(r=>r.type==='fault');
     const tpFaultRows=rawData.filter(r=>r.type==='tp_fault');
     const stFaultRows=rawData.filter(r=>r.type==='st_fault');
+    // faultId alanını repair kayıtlarına ekle (checks alanında saklıyoruz)
+    repairs.forEach(r=>{if(r.checks&&r.checks.startsWith('FAULTID:')){r.faultId=r.checks.replace('FAULTID:','');}});
+    tpRepairs.forEach(r=>{if(r.checks&&r.checks.startsWith('FAULTID:')){r.faultId=r.checks.replace('FAULTID:','');}});
+    stRepairs.forEach(r=>{if(r.checks&&r.checks.startsWith('FAULTID:')){r.faultId=r.checks.replace('FAULTID:','');}});
     const faultRepairMap=matchFaultsToRepairs(faultRows,repairs);
     const tpFaultRepairMap=matchFaultsToRepairs(tpFaultRows,tpRepairs);
     const stFaultRepairMap=matchFaultsToRepairs(stFaultRows,stRepairs);
@@ -381,10 +403,13 @@ function App(){
     });
     rawData.forEach(row=>{
       if(delIDs.includes(row.flId))return;
-      if(flMap[row.flId]&&Number(row.hours)>flMap[row.flId].hours){
-        flMap[row.flId].hours=Number(row.hours);
+      // hours_override ve forklift_register hariç, sadece yüksek saatleri uygula
+      if(row.type!=='hours_override'&&row.type!=='forklift_register'){
+        if(flMap[row.flId]&&Number(row.hours)>flMap[row.flId].hours){
+          flMap[row.flId].hours=Number(row.hours);
+        }
       }
-      const checksArr=(row.checks&&row.checks.trim())?row.checks.split(',').map(s=>s.trim()).filter(s=>s!==''):[];
+      const checksArr=(row.checks&&row.checks.trim()&&!row.checks.startsWith('FAULTID:'))?row.checks.split(',').map(s=>s.trim()).filter(s=>s!==''):[];
       const baseRec={id:row.id,fid:row.flId,fn:row.flName,h:Number(row.hours),notes:row.note,dt:row.timestamp,done:checksArr.length,checksArr:checksArr};
       if(row.type==='m250')newData.m250.push({...baseRec,tech:row.person,tot:getListForType(mergedLists,'m250',gft(row.flId)).length});
       if(row.type==='m500')newData.m500.push({...baseRec,tech:row.person,tot:getListForType(mergedLists,'m500',gft(row.flId)).length});
@@ -413,6 +438,24 @@ function App(){
         stFaultsList.push({id:row.id,stId:row.flId,stName:row.flName,by:row.person,desc:row.note,prio:'high',dt:row.timestamp,st:isRepaired?'closed':'open',closedBy:repairLog?repairLog.person:null,closedDesc:repairLog?repairLog.note:null,closedDt:repairLog?repairLog.timestamp:null});
       }
     });
+    // hours_override: en son override varsa ve mevcut saatten farklıysa zorla uygula
+    Object.keys(hoMap).forEach(flId=>{
+      if(flMap[flId]){
+        const overrideRow=hoMap[flId];
+        const overrideHours=Number(overrideRow.hours);
+        const overrideTime=new Date(overrideRow.timestamp).getTime();
+        // Override sonrası gelen kayıtlardan sadece daha yüksek olanları kontrol et
+        let maxAfterOverride=overrideHours;
+        rawData.forEach(row=>{
+          if(row.flId===flId&&row.type!=='hours_override'&&row.type!=='forklift_register'&&row.type!=='equipment_delete'&&row.type!=='fuel_type_set'&&row.type!=='list_update'){
+            if(new Date(row.timestamp).getTime()>overrideTime&&Number(row.hours)>maxAfterOverride){
+              maxAfterOverride=Number(row.hours);
+            }
+          }
+        });
+        flMap[flId].hours=maxAfterOverride;
+      }
+    });
     newData.forklifts=Object.values(flMap);
     setData(newData);
     setTranspalets(Object.values(tpMap));
@@ -421,8 +464,7 @@ function App(){
     setStackers(Object.values(stMap));
     setStChecks(stChecksList);
     setStFaults(stFaultsList);
-  };
-  const sendData=(type,payload)=>{
+  };  const sendData=(type,payload)=>{
     setLoading(true);
     const d=new FormData();
     d.append("action","write");
@@ -435,7 +477,9 @@ function App(){
     d.append("note",payload.note||payload.desc||"");
     if(payload.date)d.append("customDate",payload.date);
     let chkStr="";
-    if(payload.chk){
+    if(payload.faultId&&(type==='repair'||type==='tp_repair'||type==='st_repair')){
+      chkStr="FAULTID:"+payload.faultId;
+    }else if(payload.chk){
       if(type==='tp_monthly'){
         chkStr=Object.keys(payload.chk).filter(k=>payload.chk[k]).map(k=>lists.tp_monthly[k]).join(", ");
       }else if(type==='st_monthly'){
@@ -587,20 +631,19 @@ function App(){
     setStTab("status");
   };
   const closeTPFault=(faultId,flId,by,desc,date)=>{
-    sendData('tp_repair',{flId:flId,person:by,hours:0,note:desc,date});
+    sendData('tp_repair',{flId:flId,person:by,hours:0,note:desc,date,faultId:faultId});
     setTpRepTgt(null);
   };
   const closeSTFault=(faultId,flId,by,desc,date)=>{
-    sendData('st_repair',{flId:flId,person:by,hours:0,note:desc,date});
+    sendData('st_repair',{flId:flId,person:by,hours:0,note:desc,date,faultId:faultId});
     setStRepTgt(null);
   };
-  const doCloseFault=()=>{
+  const doCloseFault=(targetFault)=>{
     const by=rpRefs.by.current?.value?.trim();
     if(!by)return alert("İsim gir");
     const date=rpRefs.date.current.value;
-    sendData('repair',{flId:repTgt.fid,person:by,hours:rpRefs.hours.current?.value,note:rpRefs.desc.current?.value,date});
-  };
-  const stats=useMemo(()=>{
+    sendData('repair',{flId:targetFault.fid,person:by,hours:rpRefs.hours.current?.value,note:rpRefs.desc.current?.value,date,faultId:targetFault.id});
+  };  const stats=useMemo(()=>{
     let ov=0,wr=0,ft=0;
     data.forklifts.forEach(f=>{const s=gS(f);if(s.inF)ft++;if(s.o2||s.o5||s.o20||s.ow)ov++;else if(s.w2||s.w5||s.w20)wr++;});
     let tpOv=0,tpFt=0;
@@ -638,7 +681,8 @@ function App(){
   };
   const DateFilterBar=()=>(
     <div style={{display:'flex',gap:10,marginBottom:10,alignItems:'center',background:'var(--inp)',padding:8,borderRadius:8,flexWrap:'wrap'}}>
-      <div style={{fontSize:12,fontWeight:700,color:'var(--dim)'}}>TARİH FİLTRESİ:</div>      <input type="date" className="inp" value={dateFilt.start} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,start:e.target.value})}/>
+      <div style={{fontSize:12,fontWeight:700,color:'var(--dim)'}}>TARİH FİLTRESİ:</div>
+      <input type="date" className="inp" value={dateFilt.start} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,start:e.target.value})}/>
       <span style={{color:'var(--dim)'}}>-</span>
       <input type="date" className="inp" value={dateFilt.end} style={{padding:5,width:'auto'}} onChange={e=>setDateFilt({...dateFilt,end:e.target.value})}/>
       {(dateFilt.start||dateFilt.end)&&<button className="btn btn-ghost btn-xs" onClick={()=>setDateFilt({start:"",end:""})}>Temizle</button>}
@@ -713,10 +757,9 @@ function App(){
         <div><label className="lbl">Tamir Eden</label><input ref={rpRefs.by} className="inp" placeholder="Teknisyen adı"/></div>
         <div><label className="lbl">Saat</label><input ref={rpRefs.hours} type="number" className="inp" placeholder="Güncel saat"/></div>
         <div><label className="lbl">Yapılan İşlemler</label><textarea ref={rpRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
-        <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{doCloseFault();setRepTgt(null);}}>✅ Arızayı Kapat</button>
+        <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{doCloseFault(repTgt);setRepTgt(null);}}>✅ Arızayı Kapat</button>
       </div></div></div>
-  );
-  const EditEquipmentModal=()=>{
+  );  const EditEquipmentModal=()=>{
     if(!editFL)return null;
     const isTP=editFL.isTP;
     const isST=editFL.isST;
@@ -730,7 +773,46 @@ function App(){
       const hours=isSmall?0:parseFloat(r.hours.current?.value)||0;
       if(isTP){sendData('transpalet_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:0});}
       else if(isST){sendData('stacker_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:0});}
-      else{sendData('forklift_register',{flId:editFL.id,flName:name,person:brand,note:model,hours:hours});}
+      else{
+        // Önce forklift_register güncelle
+        const d1=new FormData();
+        d1.append("action","write");
+        d1.append("id",uid());
+        d1.append("type","forklift_register");
+        d1.append("flId",editFL.id);
+        d1      else{
+        // Önce forklift_register güncelle
+        const d1=new FormData();
+        d1.append("action","write");
+        d1.append("id",uid());
+        d1.append("type","forklift_register");
+        d1.append("flId",editFL.id);
+        d1.append("flName",name);
+        d1.append("person",brand);
+        d1.append("hours",hours);
+        d1.append("note",model);
+        d1.append("checks","");
+        setLoading(true);
+        fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d1}).then(r=>r.json()).then(()=>{
+          // hours_override kaydı gönder — filo yönetiminden saat zorla ayarlanır
+          const d2=new FormData();
+          d2.append("action","write");
+          d2.append("id",uid());
+          d2.append("type","hours_override");
+          d2.append("flId",editFL.id);
+          d2.append("flName",name);
+          d2.append("person","admin");
+          d2.append("hours",hours);
+          d2.append("note","Saat manuel güncellendi: "+hours+"h");
+          d2.append("checks","");
+          return fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d2});
+        }).then(r=>r.json()).then(()=>{
+          showToast("Forklift Güncellendi!");
+          fetchData();
+          setEditFL(null);
+        }).catch(()=>{setLoading(false);alert("Hata");});
+        return;
+      }
       setEditFL(null);
     };
     return(
@@ -748,6 +830,9 @@ function App(){
             <div><label className="lbl">Model</label><input ref={r.model} className="inp" defaultValue={editFL.model}/></div>
             {!isSmall&&<div><label className="lbl">Saat (Güncelle)</label><input ref={r.hours} className="inp" type="number" defaultValue={editFL.hours}/></div>}
           </div>
+          {!isSmall&&<div style={{marginTop:10,padding:10,borderRadius:8,background:'#3b82f610',border:'1px solid #3b82f620',fontSize:12,color:'var(--blue)'}}>
+            ℹ️ Buradan girilen saat değeri, mevcut saatten düşük olsa bile zorla uygulanır. Bakım ve arıza formlarından girilen düşük saatler ise yoksayılır.
+          </div>}
           <div style={{marginTop:14,fontSize:11,color:"var(--dim)"}}>Not: Ekipman ID'si ({editFL.id}) aynı kalacak.</div>
           <button className={"btn "+(isTP?'btn-cyan':isST?'btn-pink':'btn-amber')} style={{width:"100%",justifyContent:"center",marginTop:14}} onClick={handleSave}>
             💾 Değişiklikleri Kaydet
@@ -837,8 +922,7 @@ function App(){
               </div>);})}
           </>
         );
-      })()}
-      {sub==="faults"&&(()=>{
+      })()}      {sub==="faults"&&(()=>{
         let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
         fs=filterByDate(fs.map(f=>({...f,dt:f.od}))).map(f=>{const{dt,...rest}=f;return rest;});
         let tpFs=tpFaults.map(f=>({...f,fn:f.tpName,by:f.by,desc:f.desc,od:f.dt,st:f.st,h:0,prio:f.prio||'normal',isTP:true})).filter(f=>selFL?f.tpId===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
@@ -889,7 +973,8 @@ function App(){
             </div>
           );
         });
-      })()}      {sub==="fleet"&&(<div>
+      })()}
+      {sub==="fleet"&&(<div>
         <div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>
         {!data.forklifts.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)",marginBottom:16}}>Forklift yok.</div>:data.forklifts.map(f=>{
           const fuelType=getFuelType(f.id);
@@ -946,8 +1031,7 @@ function App(){
         ))}
       </div>)}
     </div>
-  );
-  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
+  );  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
     {data.forklifts.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>}
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"forklift://"+f.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setSelTP(null);setSelST(null);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
     {transpalets.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>}
@@ -978,7 +1062,8 @@ function App(){
           <button className="btn btn-ghost" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setPg("dash");setSel(null);setSelTP(null);setSelST(null)}}>← Ana Panel</button>
         </div>
       );
-    }    if(sel){
+    }
+    if(sel){
       const st=gS(sel);
       const fuelType=getFuelType(sel.id);
       const selIsElectric=isElectric(fuelType);
@@ -1033,8 +1118,7 @@ function App(){
           {tab==="wk"&&<FormTemplate title={"AYLIK KONTROL"+(selIsElectric?" ⚡":"")} color="var(--green)" items={getListForType(lists,'weekly',fuelType)} onSubmit={handleWk} sel={sel}/>}
         </div>
       );
-    }
-    if(selTP){
+    }    if(selTP){
       const tpS=getTPStatus(selTP);
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
@@ -1101,7 +1185,8 @@ function App(){
           </div>}
         </div>
       );
-    }    if(selST){
+    }
+    if(selST){
       const stS=getSTStatus(selST);
       return(
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
@@ -1169,8 +1254,7 @@ function App(){
         </div>
       );
     }
-  };
-  const SettingsModal=()=>(
+  };  const SettingsModal=()=>(
     <div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" onClick={e=>e.stopPropagation()}>
       <h3>⚙ Ayarlar</h3>
       <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:15}}>
