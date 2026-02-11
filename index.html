@@ -295,7 +295,7 @@ const FuelTypeModal = ({forklift, onClose, onSave}) => {
                 <div key={f.v} onClick={()=>setSelected(f.v)} 
                     style={{display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:10, cursor:'pointer', border:`2px solid ${selected===f.v?(f.v==='electric'?'#a855f7':'var(--amber)'):'var(--border)'}`, background:selected===f.v?(f.v==='electric'?'#a855f710':'#f59e0b08'):'var(--inp)', transition:'all .2s'}}>
                     <span style={{fontSize:20}}>{f.e}</span>
-                    <span style={{fontWeight:700, fontSize:14, color:selected===f.v?'var(--text)' :'var(--dim)'}}>{f.l}</span>
+                    <span style={{fontWeight:700, fontSize:14, color:selected===f.v?'var(--text)':'var(--dim)'}}>{f.l}</span>
                     {selected===f.v && <span style={{marginLeft:'auto', color:f.v==='electric'?'#a855f7':'var(--amber)', fontWeight:800}}>✓</span>}
                 </div>
             ))}
@@ -328,7 +328,6 @@ function App(){
   const [fuelModal, setFuelModal] = useState(null);
   const [fuelRefresh, setFuelRefresh] = useState(0);
 
-  // ARTIK LOCALSTORAGE YOK, TAMAMEN GOOGLE SHEETS
   const [transpalets, setTranspalets] = useState([]);
   const [tpChecks, setTpChecks] = useState([]);
   const [tpFaults, setTpFaults] = useState([]);
@@ -356,8 +355,8 @@ function App(){
     const newData = { forklifts:[], faults:[], m250:[], m500:[], m2000:[], weekly:[] };
     const flMap = {};
     const tpMap = {};
-    const newTpChecks = [];
-    const newTpFaults = [];
+    const tpChecksList = [];
+    const tpFaultsList = [];
 
     const repairs = rawData.filter(r => r.type === 'repair');
     const tpRepairs = rawData.filter(r => r.type === 'tp_repair');
@@ -372,17 +371,16 @@ function App(){
             fuel: getFuelType(row.flId)
         };
       }
-      if(row.type === 'tp_register') {
+      if(row.type === 'transpalet_register') {
         tpMap[row.flId] = {
-            id: row.flId, name: row.flName, brand: row.person, model: row.note
+            id: row.flId, name: row.flName, brand: row.person,
+            model: row.note, hours: 0, status: 'active'
         };
       }
     });
 
     rawData.forEach(row => {
       if(deletedIDs.includes(row.flId)) return;
-
-      // FORKLİFT İŞLEMLERİ
       if(flMap[row.flId] && Number(row.hours) > flMap[row.flId].hours) {
           flMap[row.flId].hours = Number(row.hours);
       }
@@ -400,6 +398,7 @@ function App(){
       if(row.type === 'm500') newData.m500.push({...baseRec, tech: row.person, tot: getListForType(lists, 'm500', getFuelType(row.flId)).length});
       if(row.type === 'm2000') newData.m2000.push({...baseRec, tech: row.person, tot: getListForType(lists, 'm2000', getFuelType(row.flId)).length});
       if(row.type === 'weekly') newData.weekly.push({...baseRec, tech: row.person, tot: getListForType(lists, 'weekly', getFuelType(row.flId)).length});
+      
       if(row.type === 'fault') {
           const isRepaired = repairs.some(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp));
           const status = isRepaired ? 'closed' : 'open';
@@ -407,25 +406,15 @@ function App(){
           if(status === 'open' && flMap[row.flId]) flMap[row.flId].status = 'fault';
       }
 
-      // TRANSPALET İŞLEMLERİ
       if(row.type === 'tp_monthly') {
-          newTpChecks.push({ id: row.id, tpId: row.flId, tech: row.person, dt: row.timestamp, notes: row.note, checksArr, done: checksArr.length });
+          tpChecksList.push({ id: row.id, tpId: row.flId, tech: row.person, dt: row.timestamp, notes: row.note, checksArr: checksArr, done: checksArr.length });
       }
 
       if(row.type === 'tp_fault') {
           const isRepaired = tpRepairs.some(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp));
-          const status = isRepaired ? 'closed' : 'open';
-          
-          let closedBy, closedDesc, closedDt;
-          if (isRepaired) {
-              const rep = tpRepairs.filter(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp)).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
-              if(rep) { closedBy = rep.person; closedDesc = rep.note; closedDt = rep.timestamp; }
-          }
-
-          newTpFaults.push({
-              id: row.id, tpId: row.flId, tpName: row.flName, by: row.person,
-              desc: row.note, prio: 'high', dt: row.timestamp, st: status,
-              closedBy, closedDesc, closedDt
+          const repairLog = isRepaired ? tpRepairs.find(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp)) : null;
+          tpFaultsList.push({
+              id: row.id, tpId: row.flId, tpName: row.flName, by: row.person, desc: row.note, prio: 'high', dt: row.timestamp, st: isRepaired ? 'closed' : 'open', closedBy: repairLog ? repairLog.person : null, closedDesc: repairLog ? repairLog.note : null, closedDt: repairLog ? repairLog.timestamp : null
           });
       }
     });
@@ -433,8 +422,8 @@ function App(){
     newData.forklifts = Object.values(flMap);
     setData(newData);
     setTranspalets(Object.values(tpMap));
-    setTpChecks(newTpChecks);
-    setTpFaults(newTpFaults);
+    setTpChecks(tpChecksList);
+    setTpFaults(tpFaultsList);
   };
 
   const sendData = (type, payload) => {
@@ -467,22 +456,19 @@ function App(){
       .then(resp => {
         if(resp.result === "success") {
           showToast("Kaydedildi!");
-          fetchData(); 
-          setTab("status"); 
-          setModal(null); 
-          setRepTgt(null);
-          if(!['tp_monthly','tp_fault','tp_repair','tp_register'].includes(type)) setSelTP(null);
+          fetchData(); setTab("status"); setModal(null); setRepTgt(null);
+          if(!['tp_monthly','tp_fault'].includes(type)) setSelTP(null);
         } else { alert("Hata"); setLoading(false); }
       })
       .catch(e => { setLoading(false); alert("Bağlantı Hatası"); });
   };
 
-  useEffect(()=>{ 
+  useEffect(() => { 
     fetchData(); 
     const p = new URLSearchParams(window.location.search);
     const qid = p.get('id');
-    if(qid) setTimeout(() => { window.autoSelectId = qid; }, 2000);
-  },[]);
+    if(qid) window.autoSelectId = qid;
+  }, []);
 
   useEffect(() => {
     if(window.autoSelectId && (data.forklifts.length > 0 || transpalets.length > 0)) {
@@ -545,12 +531,10 @@ function App(){
   const addTP = () => {
       const name = tpRefs.name.current?.value?.trim(); if(!name) return alert("Ad zorunlu.");
       const tpId = "TP-"+uid();
-      sendData('tp_register', {
-          flId: tpId, flName: name, 
-          person: tpRefs.brand.current?.value?.trim()||"", 
-          hours: 0, 
-          note: tpRefs.model.current?.value?.trim()||"" 
-      });
+      const brand = tpRefs.brand.current?.value?.trim()||"";
+      const model = tpRefs.model.current?.value?.trim()||"";
+      sendData('transpalet_register', { flId: tpId, flName: name, person: brand, note: model, hours: 0 });
+      setModal(null);
   };
 
   const deleteTranspalet = (id) => {
@@ -582,8 +566,8 @@ function App(){
       setTpTab("status");
   };
 
-  const closeTPFault = (faultId, tpId, by, desc, date) => {
-      sendData('tp_repair', { flId: tpId, person: by, hours: 0, note: desc, date });
+  const closeTPFault = (faultId, flId, by, desc, date) => {
+      sendData('tp_repair', { flId: flId, person: by, hours: 0, note: desc, date });
       setTpRepTgt(null);
   };
 
@@ -956,7 +940,7 @@ function App(){
                 </div>}
             </div>}
 
-            {tpTab==="fault"&&<FaultForm sel={selTP} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} isTP={true} />}
+            {tpTab==="fault"&&<FaultForm sel={selTP} onSubmit={handleTPCheck} isTP={true} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} />}
             
             {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />}
             
