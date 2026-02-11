@@ -99,7 +99,6 @@ const getSavedLists = () => {
     const s = localStorage.getItem("opus_lists");
     if(s) {
         const parsed = JSON.parse(s);
-        // Geriye uyumluluk: eski kayıtlarda elektrikli listeler yoksa ekle
         if(!parsed.m2000) parsed.m2000 = DEF_M2000;
         if(!parsed.em250) parsed.em250 = DEF_EM250;
         if(!parsed.em500) parsed.em500 = DEF_EM500;
@@ -111,7 +110,6 @@ const getSavedLists = () => {
     return { m250: DEF_M250, m500: DEF_M500, m2000: DEF_M2000, weekly: DEF_WCHK, em250: DEF_EM250, em500: DEF_EM500, em2000: DEF_EM2000, eweekly: DEF_EWCHK, tp_monthly: DEF_TP_MONTHLY };
 };
 
-/* Yakıt tipi localStorage yönetimi */
 const getFuelTypes = () => JSON.parse(localStorage.getItem("opus_fuel_types") || "{}");
 const saveFuelType = (flId, fuelType) => {
     const ft = getFuelTypes();
@@ -120,7 +118,6 @@ const saveFuelType = (flId, fuelType) => {
 };
 const getFuelType = (flId) => getFuelTypes()[flId] || "diesel";
 
-/* Forklift tipine göre doğru listeyi seç */
 const getListForType = (lists, maintType, fuelType) => {
     const elc = isElectric(fuelType);
     switch(maintType) {
@@ -140,7 +137,6 @@ const FuelBadge = ({fuelType}) => {
 
 const TPBadge = () => <span className="tp-badge">🔋 Elektrikli Transpalet</span>;
 
-/* Transpalet localStorage yönetimi */
 const getSavedTranspalets = () => JSON.parse(localStorage.getItem("opus_transpalets") || "[]");
 const saveTranspalets = (list) => localStorage.setItem("opus_transpalets", JSON.stringify(list));
 const getSavedTPChecks = () => JSON.parse(localStorage.getItem("opus_tp_checks") || "[]");
@@ -217,25 +213,25 @@ const FormTemplate = ({ title, color, items, onSubmit, sel, noHours }) => {
     </div>);
 }
 
-const FaultForm=({sel,onSubmit})=>{
+const FaultForm=({sel,onSubmit,isTP})=>{
     const r={by:useRef(),hours:useRef(),prio:useRef(),desc:useRef(),date:useRef()};
     const today = new Date().toISOString().split('T')[0];
     const handle=()=>{
         const by=r.by.current.value.trim(),desc=r.desc.current.value.trim(), date=r.date.current.value;
-        const hours = parseFloat(r.hours.current.value);
+        const hours = isTP ? 0 : parseFloat(r.hours.current?.value);
         if(!by||!desc||!date)return alert("Eksik bilgi.");
-        if(hours < sel.hours) {
+        if(!isTP && hours < sel.hours) {
             if(!confirm(`⚠️ Girdiğiniz saat (${hours}) mevcut saatten (${sel.hours}) düşük! Devam edilsin mi?`)) return;
         }
         onSubmit({by,hours,prio:r.prio.current.value,desc,date});
-        r.by.current.value="";r.hours.current.value="";r.desc.current.value="";r.prio.current.value="normal";
+        r.by.current.value="";if(!isTP)r.hours.current.value="";r.desc.current.value="";r.prio.current.value="normal";
     };
     return(<div className="card"><h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:"var(--red)"}}>🔴 Arıza Bildirimi</h3>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
     <div><label className="lbl">Tarih</label><input ref={r.date} type="date" className="inp" defaultValue={today} /></div>
     <div><label className="lbl">Bildiren</label><input ref={r.by} className="inp" placeholder="Ad Soyad"/></div>
     <div className="grid-2">
-        <div><label className="lbl">Saat</label><input ref={r.hours} className="inp" type="number" placeholder={sel.hours}/></div>
+        {!isTP && <div><label className="lbl">Saat</label><input ref={r.hours} className="inp" type="number" placeholder={sel.hours}/></div>}
         <div><label className="lbl">Öncelik</label><select ref={r.prio} className="inp" defaultValue="normal">{Object.entries(PRIO).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
     </div>
     <div><label className="lbl">Açıklama</label><textarea ref={r.desc} className="inp" placeholder="Arıza nedir?"/></div>
@@ -243,7 +239,6 @@ const FaultForm=({sel,onSubmit})=>{
     </div></div>);
 };
 
-/* LİSTE DÜZENLEME MODALI - ELEKTRİKLİ LİSTELER EKLENDİ */
 const ListEditor = ({ onClose, onSave }) => {
     const [lists, setLists] = useState(getSavedLists());
     const [activeTab, setActiveTab] = useState("m250");
@@ -256,7 +251,6 @@ const ListEditor = ({ onClose, onSave }) => {
     return (<div className="overlay" onClick={onClose}><div className="card mbody" onClick={e=>e.stopPropagation()}>
         <h3 style={{marginBottom:6}}>📝 Kontrol Listelerini Düzenle</h3>
         
-        {/* Standart Listeler */}
         <div style={{fontSize:11, color:'var(--mute)', fontWeight:700, marginTop:12, marginBottom:4, letterSpacing:1}}>⛽ STANDART FORKLİFT (Dizel/Benzin/LPG/Hibrit)</div>
         <div className="tabs" style={{marginBottom:6}}>
             {[{k:'m250',l:'250h'},{k:'m500',l:'500h'},{k:'m2000',l:'2000h'},{k:'weekly',l:'Aylık'}].map(t=>(
@@ -264,7 +258,6 @@ const ListEditor = ({ onClose, onSave }) => {
             ))}
         </div>
 
-        {/* Elektrikli Listeler */}
         <div style={{fontSize:11, color:'#c084fc', fontWeight:700, marginTop:8, marginBottom:4, letterSpacing:1}}>⚡ ELEKTRİKLİ FORKLİFT</div>
         <div className="tabs" style={{marginBottom:6}}>
             {[{k:'em250',l:'250h'},{k:'em500',l:'500h'},{k:'em2000',l:'2000h'},{k:'eweekly',l:'Aylık'}].map(t=>(
@@ -272,13 +265,11 @@ const ListEditor = ({ onClose, onSave }) => {
             ))}
         </div>
 
-        {/* Transpalet */}
         <div style={{fontSize:11, color:'#22d3ee', fontWeight:700, marginTop:8, marginBottom:4, letterSpacing:1}}>🔋 ELEKTRİKLİ TRANSPALET</div>
         <div className="tabs" style={{marginBottom:10}}>
             <div className={`tab ${activeTab==='tp_monthly'?'active':''}`} style={activeTab==='tp_monthly'?{background:'var(--cyan)',color:'#000'}:{}} onClick={()=>setActiveTab('tp_monthly')}>Aylık Kontrol</div>
         </div>
 
-        {/* Aktif sekme bilgisi */}
         <div style={{fontSize:12, fontWeight:700, color: activeTab==='tp_monthly'?'#22d3ee':activeTab.startsWith('e') ? '#c084fc' : 'var(--amber)', marginBottom:8, display:'flex', alignItems:'center', gap:6}}>
             <span>{activeTab==='tp_monthly'?'🔋':activeTab.startsWith('e') ? '⚡' : '⛽'}</span>
             <span>{activeTab==='tp_monthly'?'Transpalet — Aylık Kontrol':(activeTab.startsWith('e') ? 'Elektrikli' : 'Standart') + ' — ' + activeTab.replace('e','').replace('weekly','Aylık').replace('m','').replace('250','250 Saat').replace('500','500 Saat').replace('2000','2000 Saat')}</span>
@@ -297,7 +288,6 @@ const ListEditor = ({ onClose, onSave }) => {
     </div></div>);
 }
 
-/* YAKIT TİPİ DEĞİŞTİRME MODALI */
 const FuelTypeModal = ({forklift, onClose, onSave}) => {
     const [selected, setSelected] = useState(getFuelType(forklift.id));
     const save = () => { saveFuelType(forklift.id, selected); onSave(); onClose(); };
@@ -333,7 +323,6 @@ function App(){
   const [sel,setSel]=useState(null);
   const [tab,setTab]=useState("status");
   const [modal,setModal]=useState(null);
-  const [filt,setFilt]=useState("all");
   const [dateFilt, setDateFilt] = useState({start:"", end:""});
   const [detailModal,setDetailModal]=useState(null);
   const [confirmDel,setConfirmDel]=useState(null);
@@ -346,12 +335,12 @@ function App(){
   const [fuelModal, setFuelModal] = useState(null);
   const [fuelRefresh, setFuelRefresh] = useState(0);
 
-  /* TRANSPALET STATE */
   const [transpalets, setTranspalets] = useState(getSavedTranspalets());
   const [tpChecks, setTpChecks] = useState(getSavedTPChecks());
   const [tpFaults, setTpFaults] = useState(getSavedTPFaults());
   const [selTP, setSelTP] = useState(null);
   const [tpRepTgt, setTpRepTgt] = useState(null);
+  const [tpTab, setTpTab] = useState("status");
 
   const flRefs={name:useRef(),brand:useRef(),model:useRef(),hours:useRef(),fuel:useRef()};
   const tpRefs={name:useRef(),brand:useRef(),model:useRef()};
@@ -382,7 +371,7 @@ function App(){
             id: row.flId, name: row.flName, brand: row.person, 
             model: row.note, hours: Number(row.hours), 
             status: 'active',
-            fuel: getFuelType(row.flId) // LocalStorage'dan yakıt tipini al
+            fuel: getFuelType(row.flId)
         };
       }
     });
@@ -453,7 +442,6 @@ function App(){
               const updated = [...tpChecks, newCheck]; setTpChecks(updated); saveTPChecks(updated);
           }
           fetchData(); setTab("status"); setModal(null); setRepTgt(null);
-          // Sadece forklift işlemlerinde selTP'yi resetle, transpalet işlemlerinde korur
           if(!['tp_monthly','tp_fault'].includes(type)) setSelTP(null);
         } else { alert("Hata"); setLoading(false); }
       })
@@ -461,7 +449,6 @@ function App(){
   };
 
   useEffect(()=>{ fetchData(); 
-    /* Transpalet kayıtlarını da Sheets'ten yükle */
     fetch(GOOGLE_SCRIPT_URL + "?action=read").then(r=>r.json()).then(resp=>{
         if(resp.data) {
             const tpRecs = [];
@@ -488,9 +475,9 @@ function App(){
     if(window.autoSelectId && (data.forklifts.length > 0 || transpalets.length > 0)) {
         const qid = window.autoSelectId;
         const f = data.forklifts.find(x => x.id === qid);
-        if(f) { setSel(f); setPg("mob"); window.autoSelectId = null; return; }
+        if(f) { setSel(f); setSelTP(null); setPg("mob"); window.autoSelectId = null; return; }
         const tp = transpalets.find(x => x.id === qid);
-        if(tp) { setSelTP(tp); setTpTab("status"); setPg("tp"); window.autoSelectId = null; return; }
+        if(tp) { setSelTP(tp); setSel(null); setTpTab("status"); setPg("mob"); window.autoSelectId = null; return; }
     }
   }, [data, transpalets]);
 
@@ -498,10 +485,6 @@ function App(){
   
   const gS=useCallback(f=>{
     const fuelType = getFuelType(f.id);
-    const m250List = getListForType(lists, 'm250', fuelType);
-    const m500List = getListForType(lists, 'm500', fuelType);
-    const m2000List = getListForType(lists, 'm2000', fuelType);
-
     const m2=data.m250.filter(m=>m.fid===f.id).sort((a,b)=>b.h-a.h);
     const m5=data.m500.filter(m=>m.fid===f.id).sort((a,b)=>b.h-a.h);
     const m20=data.m2000.filter(m=>m.fid===f.id).sort((a,b)=>b.h-a.h);
@@ -526,7 +509,6 @@ function App(){
     const name=flRefs.name.current?.value?.trim();if(!name)return alert("Ad zorunlu.");
     const flId = "FL-"+uid();
     const fuelType = flRefs.fuel.current?.value || "diesel";
-    // Yakıt tipini localStorage'a kaydet
     saveFuelType(flId, fuelType);
     sendData('forklift_register', {
         flId: flId, flName: name,
@@ -581,17 +563,14 @@ function App(){
       return <span className="badge" style={{background:"#22c55e18",color:"#4ade80"}}>✓ Aktif</span>;
   };
 
-  /* Transpalet arıza bildirimi */
   const submitTPFault = (tpId, tpName, by, desc, prio, date) => {
       const fault = { id: uid(), tpId, tpName, by, desc, prio, dt: date || new Date().toISOString(), st: 'open' };
       const updated = [...tpFaults, fault];
       setTpFaults(updated); saveTPFaults(updated);
-      // Google Sheets'e de kaydet
       sendData('tp_fault', { flId: tpId, flName: tpName, person: by, hours: 0, note: desc, date });
       setTpTab("status");
   };
 
-  /* Transpalet arıza kapatma */
   const closeTPFault = (faultId, by, desc, date) => {
       const updated = tpFaults.map(f => f.id === faultId ? {...f, st:'closed', closedBy:by, closedDesc:desc, closedDt:date||new Date().toISOString()} : f);
       setTpFaults(updated); saveTPFaults(updated);
@@ -599,27 +578,6 @@ function App(){
       setTpRepTgt(null);
   };
 
-  /* Transpalet Arıza Formu */
-  const TPFaultForm = ({tp}) => {
-      const r = {by:useRef(), desc:useRef(), prio:useRef(), date:useRef()};
-      const today = new Date().toISOString().split('T')[0];
-      const handle = () => {
-          const by=r.by.current.value.trim(), desc=r.desc.current.value.trim(), date=r.date.current.value;
-          if(!by||!desc||!date) return alert("Eksik bilgi.");
-          submitTPFault(tp.id, tp.name, by, desc, r.prio.current.value, date);
-          r.by.current.value=""; r.desc.current.value="";
-      };
-      return (<div className="card"><h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:"var(--red)"}}>🔴 Arıza Bildirimi</h3>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      <div><label className="lbl">Tarih</label><input ref={r.date} type="date" className="inp" defaultValue={today} /></div>
-      <div><label className="lbl">Bildiren</label><input ref={r.by} className="inp" placeholder="Ad Soyad"/></div>
-      <div><label className="lbl">Öncelik</label><select ref={r.prio} className="inp" defaultValue="normal">{Object.entries(PRIO).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
-      <div><label className="lbl">Açıklama</label><textarea ref={r.desc} className="inp" placeholder="Arıza nedir?"/></div>
-      <button className="btn btn-red" style={{width:"100%",justifyContent:"center"}} onClick={handle}>🔴 Arıza Bildir</button>
-      </div></div>);
-  };
-
-  /* Transpalet Arıza Kapatma Modalı */
   const TPRepairModal = () => tpRepTgt && (
       <div className="overlay" onClick={()=>setTpRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Transpalet Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setTpRepTgt(null)}>✕</button></div>
@@ -634,6 +592,7 @@ function App(){
       }}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
+
   const doCloseFault=()=>{
     const by=rpRefs.by.current?.value?.trim(); if(!by)return alert("İsim gir");
     const date = rpRefs.date.current.value;
@@ -656,16 +615,17 @@ function App(){
   };
 
   const MaintDetail=({type,record,onClose})=>{
-    const fuelType = getFuelType(record.fid);
+    const isTP = type === "tp_monthly";
+    const fuelType = isTP ? null : getFuelType(record.fid);
     const color=type==="m250"?"var(--amber)":type==="m500"?"var(--blue)":type==="m2000"?"#a855f7":type==="tp_monthly"?"var(--cyan)":"var(--green)";
     const doneItems = record.checksArr || [];
     return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{border:`1px solid ${color}40`}} onClick={e=>e.stopPropagation()}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-    <h3 style={{fontSize:16,fontWeight:700,color}}>{type==='tp_monthly'?'TRANSPALET AYLIK KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
+    <h3 style={{fontSize:16,fontWeight:700,color}}>{isTP?'TRANSPALET AYLIK KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
     <div style={{marginBottom:12}}>
-    <div className="dr"><span className="dl">{type==='tp_monthly'?'Transpalet':'Forklift'}</span><span className="dv" style={{fontWeight:700}}>{record.fn} {type==='tp_monthly'?<TPBadge/>:<FuelBadge fuelType={fuelType}/>}</span></div>
+    <div className="dr"><span className="dl">{isTP?'Transpalet':'Forklift'}</span><span className="dv" style={{fontWeight:700}}>{record.fn} {isTP?<TPBadge/>:<FuelBadge fuelType={fuelType}/>}</span></div>
     <div className="dr"><span className="dl">Personel</span><span className="dv">{record.tech||"—"}</span></div>
-    {type!=='tp_monthly'&&<div className="dr"><span className="dl">Saat</span><span className="dv mono">{record.h}h</span></div>}
+    {!isTP&&<div className="dr"><span className="dl">Saat</span><span className="dv mono">{record.h}h</span></div>}
     <div className="dr"><span className="dl">Tarih</span><span className="dv">{fd(record.dt)}</span></div>
     {record.notes&&<div className="dr"><span className="dl">Notlar</span><span className="dv">{record.notes}</span></div>}
     </div>
@@ -699,25 +659,28 @@ function App(){
 
   const FlFilterBar = () => (
       <div style={{display:'flex', gap:6, marginBottom:14, flexWrap:'wrap', alignItems:'center'}}>
-        <span style={{fontSize:11, color:'var(--mute)', fontWeight:700}}>FORKLİFT:</span>
+        <span style={{fontSize:11, color:'var(--mute)', fontWeight:700}}>EKİPMAN:</span>
         <div className={`fl-filter-chip${selFL===null?' active':''}`} onClick={()=>setSelFL(null)}>Tümü</div>
         {data.forklifts.map(f=>(
             <div key={f.id} className={`fl-filter-chip${selFL===f.id?' active':''}`} onClick={()=>setSelFL(selFL===f.id?null:f.id)}>
                 {isElectric(getFuelType(f.id))?'⚡':'⛽'} {f.name}
             </div>
         ))}
+        {transpalets.map(tp=>(
+            <div key={tp.id} className={`fl-filter-chip${selFL===tp.id?' active':''}`} onClick={()=>setSelFL(selFL===tp.id?null:tp.id)}>
+                🔋 {tp.name}
+            </div>
+        ))}
       </div>
   );
 
-  // DASHBOARD
   const Dash=()=>(
     <div style={{padding:24,maxWidth:1200,margin:"0 auto"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:24}}>
         <div><h1 style={{fontSize:26,fontWeight:900}}><span style={{color:"var(--amber)"}}>⚙</span> Forklift Bakım</h1><p style={{color:"var(--mute)",fontSize:13,marginTop:2}}>Ana Kontrol Paneli</p></div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <button className="btn btn-cyan" onClick={()=>{setPg("tp");setSelTP(null)}}>🔋 Transpalet</button>
           <button className="btn btn-amber" onClick={()=>setPg("qr")}>📱 QR</button>
-          <button className="btn btn-blue" onClick={()=>{setPg("mob");setSel(null)}}>📋 Mobil Giriş</button>
+          <button className="btn btn-blue" onClick={()=>{setPg("mob");setSel(null);setSelTP(null);}}>📋 Mobil Giriş</button>
           <button className="btn btn-ghost" onClick={()=>{setEditFL(null);setModal("settings")}}>⚙ Ayarlar</button>
         </div>
       </div>
@@ -729,45 +692,64 @@ function App(){
       </div>
 
       <div className="tabs" style={{marginBottom:18,maxWidth:800}}>
-        {[{k:"overview",l:"Genel Bakış"},{k:"transpalet",l:"🔋 Transpaletler"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"Filo Yönetimi"}].map(t=>
+        {[{k:"overview",l:"Genel Bakış"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"Filo Yönetimi"}].map(t=>
           <div key={t.k} className={`tab${sub===t.k?" active":""}`} onClick={()=>setSub(t.k)} style={{fontSize:12}}>{t.l}</div>
         )}
       </div>
 
-      {data.forklifts.length>=1 && ["overview","faults","maint","weekly"].includes(sub) && <FlFilterBar />}
+      {(data.forklifts.length>=1 || transpalets.length>=1) && ["overview","faults","maint","weekly"].includes(sub) && <FlFilterBar />}
       {["faults","maint","weekly"].includes(sub)&&<DateFilterBar />}
       
       {sub==="overview"&&(()=>{
-        const flList = selFL ? data.forklifts.filter(f=>f.id===selFL) : data.forklifts;
-        if(!flList.length) return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Henüz forklift yok. Ayarlardan ekleyin.</div>;
-        return flList.map(f=>{const s=gS(f);const fuelType=getFuelType(f.id);return(
-        <div key={f.id} className="card" style={{marginBottom:12,borderColor:s.inF?"#ef444440":s.o2||s.o5||s.o20?"#f59e0b25":undefined}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-            <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{f.name}</h3><FuelBadge fuelType={fuelType}/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span><Badge f={f}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}><div className="mono" style={{fontSize:22,fontWeight:800,color:"var(--amber)"}}>{f.hours}h</div></div>
-          </div>
-          <div className="g-auto" style={{marginTop:14}}>
-            <div className="mcard" style={{borderLeftColor:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>250 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o2?"var(--red)":s.w2?"var(--amber)":"#4ade80",marginTop:3}}>{s.o2?Math.abs(s.r2)+"h GECİKMİŞ":s.r2+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(250-Math.max(0,s.r2))/250*100)+"%",background:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}/></div></div>
-            <div className="mcard" style={{borderLeftColor:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>500 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o5?"var(--red)":s.w5?"var(--amber)":"#4ade80",marginTop:3}}>{s.o5?Math.abs(s.r5)+"h GECİKMİŞ":s.r5+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(500-Math.max(0,s.r5))/500*100)+"%",background:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}/></div></div>
-            <div className="mcard" style={{borderLeftColor:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>2000 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o20?"var(--red)":s.w20?"var(--amber)":"#4ade80",marginTop:3}}>{s.o20?Math.abs(s.r20)+"h GECİKMİŞ":s.r20+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(2000-Math.max(0,s.r20))/2000*100)+"%",background:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}/></div></div>
-            <div className="mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK</div><div style={{fontSize:14,fontWeight:700,color:s.ow?"var(--red)":"#4ade80",marginTop:3}}>{s.ow?s.dw+" gün gecikmiş":s.dw<999?(30-s.dw)+" gün kalan":"Yapılmadı"}</div></div>
-          </div>
-        </div>);
-      })})()}
-
-      {/* TRANSPALET TAB */}
-      {sub==="transpalet"&&(()=>{
-          if(!transpalets.length) return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Henüz transpalet yok. Ayarlardan ekleyin.</div>;
-          return transpalets.map(tp => { const tpS = getTPStatus(tp); return (
-            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.overdue?"#ef444430":undefined}} onClick={()=>{setPg("tp");setSelTP(tp)}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/><div style={{fontSize:11,color:tpS.overdue?"var(--red)":"var(--dim)",marginTop:3,fontWeight:600}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div>
-            </div>);});
+        const flList = data.forklifts.filter(f=>selFL?f.id===selFL:true);
+        const tpList = transpalets.filter(tp=>selFL?tp.id===selFL:true);
+        if(!flList.length && !tpList.length) return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman bulunamadı.</div>;
+        return (
+            <>
+            {flList.map(f=>{const s=gS(f);const fuelType=getFuelType(f.id);return(
+            <div key={f.id} className="card" style={{marginBottom:12,borderColor:s.inF?"#ef444440":s.o2||s.o5||s.o20?"#f59e0b25":undefined}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+                <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{f.name}</h3><FuelBadge fuelType={fuelType}/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span><Badge f={f}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}><div className="mono" style={{fontSize:22,fontWeight:800,color:"var(--amber)"}}>{f.hours}h</div></div>
+              </div>
+              <div className="g-auto" style={{marginTop:14}}>
+                <div className="mcard" style={{borderLeftColor:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>250 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o2?"var(--red)":s.w2?"var(--amber)":"#4ade80",marginTop:3}}>{s.o2?Math.abs(s.r2)+"h GECİKMİŞ":s.r2+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(250-Math.max(0,s.r2))/250*100)+"%",background:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}/></div></div>
+                <div className="mcard" style={{borderLeftColor:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>500 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o5?"var(--red)":s.w5?"var(--amber)":"#4ade80",marginTop:3}}>{s.o5?Math.abs(s.r5)+"h GECİKMİŞ":s.r5+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(500-Math.max(0,s.r5))/500*100)+"%",background:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}/></div></div>
+                <div className="mcard" style={{borderLeftColor:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>2000 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o20?"var(--red)":s.w20?"var(--amber)":"#4ade80",marginTop:3}}>{s.o20?Math.abs(s.r20)+"h GECİKMİŞ":s.r20+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(2000-Math.max(0,s.r20))/2000*100)+"%",background:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}/></div></div>
+                <div className="mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK</div><div style={{fontSize:14,fontWeight:700,color:s.ow?"var(--red)":"#4ade80",marginTop:3}}>{s.ow?s.dw+" gün gecikmiş":s.dw<999?(30-s.dw)+" gün kalan":"Yapılmadı"}</div></div>
+              </div>
+            </div>)})}
+            {tpList.map(tp => {
+                const tpS = getTPStatus(tp);
+                return (
+                    <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+                            <div>
+                                <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                                    <h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3>
+                                    <TPBadge/>
+                                    <span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span>
+                                    <TPStatusBadge tp={tp}/>
+                                </div>
+                                <div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div>
+                            </div>
+                        </div>
+                        <div className="g-auto" style={{marginTop:14}}>
+                            <div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}>
+                                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div>
+                                <div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })}
+            </>
+        );
       })()}
 
       {sub==="faults"&&(()=>{
           let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
           fs = filterByDate(fs);
-          /* Transpalet arızalarını da ekle */
           let tpFs = selFL ? [] : tpFaults.map(f=>({...f, id:f.id, fn:f.tpName, by:f.by, desc:f.desc, od:f.dt, st:f.st, h:0, prio:f.prio||'normal', isTP:true})).sort((a,b)=>new Date(b.od)-new Date(a.od));
           tpFs = filterByDate(tpFs.map(f=>({...f,dt:f.od})));
           const all = [...fs, ...tpFs].sort((a,b)=>new Date(b.od)-new Date(a.od));
@@ -793,12 +775,29 @@ function App(){
       </div>}
 
       {sub==="weekly"&&(()=>{
-          let ws=data.weekly.filter(w=>selFL?w.fid===selFL:true).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
-          ws = filterByDate(ws);
-          if(!ws.length)return<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Kayıt yok</div>;
-          return ws.map(w=>{
-              const fuelType = getFuelType(w.fid);
-              return <div key={w.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--green)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"weekly",record:w})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}><div><span style={{fontWeight:700}}>{w.fn}</span>{isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>}<span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>{w.h}h</span></div><span className="badge" style={{background:"#22c55e20",color:"#4ade80"}}>{w.done} yapıldı — detay →</span></div><div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Operatör: <b style={{color:"var(--dim)"}}>{w.tech}</b> • {fd(w.dt)}</div></div>;
+          let ws = data.weekly.map(w => ({...w, isTP: false})).filter(w=>selFL?w.fid===selFL:true);
+          let tps = tpChecks.map(c => ({...c, isTP: true, fid: c.tpId, fn: transpalets.find(t=>t.id===c.tpId)?.name || "Transpalet", h: 0})).filter(c=>selFL?c.fid===selFL:true);
+          let allWs = [...ws, ...tps].sort((a,b)=>new Date(b.dt)-new Date(a.dt));
+          allWs = filterByDate(allWs);
+
+          if(!allWs.length) return <div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Kayıt yok</div>;
+          
+          return allWs.map(w => {
+              const isTP = w.isTP;
+              const fuelType = isTP ? null : getFuelType(w.fid);
+              return (
+                  <div key={w.id} className="card" style={{marginBottom:6,borderLeft:`3px solid ${isTP?"var(--cyan)":"var(--green)"}`,cursor:"pointer"}} onClick={()=>setDetailModal({type: isTP ? "tp_monthly" : "weekly", record: w})}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap"}}>
+                          <div>
+                              <span style={{fontWeight:700}}>{w.fn}</span>
+                              {isTP ? <span style={{marginLeft:5}}><TPBadge/></span> : (isElectric(fuelType)&&<span style={{marginLeft:5,fontSize:10}}>⚡</span>)}
+                              {!isTP && <span className="mono" style={{color:"var(--mute)",fontSize:12,marginLeft:8}}>{w.h}h</span>}
+                          </div>
+                          <span className="badge" style={{background:isTP?"#06b6d420":"#22c55e20",color:isTP?"#22d3ee":"#4ade80"}}>{w.done} yapıldı — detay →</span>
+                      </div>
+                      <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>{isTP?"Personel":"Operatör"}: <b style={{color:"var(--dim)"}}>{w.tech}</b> • {fd(w.dt)}</div>
+                  </div>
+              );
           });
       })()}
 
@@ -823,7 +822,6 @@ function App(){
         </div>;
         })}
 
-        {/* TRANSPALETLER */}
         <div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10,marginTop:20}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>
         {!transpalets.length?<div className="card" style={{textAlign:"center",padding:20,color:"var(--dark)"}}>Transpalet yok.</div>:transpalets.map(tp=>(
           <div key={tp.id} className="card" style={{marginBottom:12}}>
@@ -844,67 +842,142 @@ function App(){
 
   const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
   {data.forklifts.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>}
-  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`forklift://${f.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`forklift://${f.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setSelTP(null);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
   {transpalets.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>}
-  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{transpalets.map(tp=><div key={tp.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`transpalet://${tp.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{tp.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{tp.brand} {tp.model}</div><div style={{marginTop:4}}><TPBadge/></div><div className="mono" style={{fontSize:12,color:"var(--cyan)",marginTop:3}}>{tp.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelTP(tp);setPg("tp")}}>Mobil Aç</button></div>)}</div>
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>{transpalets.map(tp=><div key={tp.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={`transpalet://${tp.id}`} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{tp.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{tp.brand} {tp.model}</div><div style={{marginTop:4}}><TPBadge/></div><div className="mono" style={{fontSize:12,color:"var(--cyan)",marginTop:3}}>{tp.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSelTP(tp);setSel(null);setTpTab("status");setPg("mob")}}>Mobil Aç</button></div>)}</div>
   {!data.forklifts.length&&!transpalets.length&&<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Ekipman yok.</div>}
   </div>);
 
   const Mobile=()=>{
-    if(!sel)return(
-    <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
-    <div style={{textAlign:"center",marginBottom:16}}><div style={{fontSize:12,color:"var(--amber)",fontWeight:700,letterSpacing:2}}>FORKLİFT BAKIM</div><h2 style={{fontSize:20,fontWeight:800,marginTop:4}}>Forklift Seçin</h2></div>
-    {!data.forklifts.length&&<div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz forklift yok.</div>}
-    {data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:gS(f).inF?"#ef444440":undefined}} onClick={()=>{setSel(f);setTab("status")}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:'flex',alignItems:'center',gap:6}}>{f.name} <FuelBadge fuelType={fuelType}/> <span style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></div><div style={{fontSize:12,color:"var(--dim)"}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><div className="mono" style={{fontSize:16,fontWeight:700,color:"var(--amber)"}}>{f.hours}h</div><Badge f={f}/></div></div></div>;})}
-    <button className="btn btn-ghost" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setPg("dash");setSel(null)}}>← Ana Panel</button>
-    </div>
-    );
+    if(!sel && !selTP){
+        return(
+        <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
+            <div style={{textAlign:"center",marginBottom:16}}><div style={{fontSize:12,color:"var(--amber)",fontWeight:700,letterSpacing:2}}>MOBİL GİRİŞ</div><h2 style={{fontSize:20,fontWeight:800,marginTop:4}}>Ekipman Seçin</h2></div>
+            {!data.forklifts.length && !transpalets.length && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz ekipman yok.</div>}
+            
+            {data.forklifts.length > 0 && <div style={{fontSize:12, fontWeight:700, color:"var(--amber)", marginBottom:8}}>FORKLİFTLER</div>}
+            {data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:gS(f).inF?"#ef444440":undefined}} onClick={()=>{setSel(f);setTab("status")}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:'flex',alignItems:'center',gap:6}}>{f.name} <FuelBadge fuelType={fuelType}/> <span style={{fontSize:11,color:"var(--mute)"}}>{f.id}</span></div><div style={{fontSize:12,color:"var(--dim)"}}>{[f.brand,f.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><div className="mono" style={{fontSize:16,fontWeight:700,color:"var(--amber)"}}>{f.hours}h</div><Badge f={f}/></div></div></div>;})}
+            
+            {transpalets.length > 0 && <div style={{fontSize:12, fontWeight:700, color:"var(--cyan)", marginBottom:8, marginTop:16}}>TRANSPALETLER</div>}
+            {transpalets.map(tp => { const tpS = getTPStatus(tp); return (
+                <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#ef444430":undefined}} onClick={()=>{setSelTP(tp);setTpTab("status")}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/></div></div>
+                </div>);})}
+            
+            <button className="btn btn-ghost" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setPg("dash");setSel(null);setSelTP(null)}}>← Ana Panel</button>
+        </div>
+        );
+    }
 
-    const st=gS(sel);
-    const fuelType = getFuelType(sel.id);
-    const selIsElectric = isElectric(fuelType);
+    if(sel) {
+        const st=gS(sel);
+        const fuelType = getFuelType(sel.id);
+        const selIsElectric = isElectric(fuelType);
 
-    return(
-    <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
-    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSel(null)}>←</button><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{sel.name}</span><FuelBadge fuelType={fuelType}/><Badge f={sel}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[sel.brand,sel.model].filter(Boolean).join(" • ")} • {sel.hours}h</div></div></div>
-    <div className="tabs" style={{marginBottom:12}}>
-    {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"m250",l:"250h"},{k:"m500",l:"500h"},{k:"m2000",l:"2000h"},{k:"wk",l:"Aylık"}].map(t=>
-    <div key={t.k} className={`tab${tab===t.k?" active":""}`} onClick={()=>setTab(t.k)}>{t.l}</div>)}
-    </div>
+        return(
+        <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSel(null)}>←</button><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{sel.name}</span><FuelBadge fuelType={fuelType}/><Badge f={sel}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[sel.brand,sel.model].filter(Boolean).join(" • ")} • {sel.hours}h</div></div></div>
+        <div className="tabs" style={{marginBottom:12}}>
+        {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"m250",l:"250h"},{k:"m500",l:"500h"},{k:"m2000",l:"2000h"},{k:"wk",l:"Aylık"}].map(t=>
+        <div key={t.k} className={`tab${tab===t.k?" active":""}`} onClick={()=>setTab(t.k)}>{t.l}</div>)}
+        </div>
 
-    {tab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-        <div className="card" style={{borderLeft:`3px solid ${st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)"}`}}>
-            <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>250 SAAT BAKIM</div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o2?"var(--red)":st.w2?"var(--amber)":"#4ade80"}}>{st.o2?Math.abs(st.r2)+"h":st.r2+"h"}</div><div style={{fontSize:11,color:st.o2?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o2?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l2h}h<br/>Sonraki: {st.n2}h</div></div>
-            <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(250-Math.max(0,st.r2))/250*100))+"%",background:st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)"}}/></div>
-        </div>
-        <div className="card" style={{borderLeft:`3px solid ${st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)"}`}}>
-            <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>500 SAAT BAKIM</div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o5?"var(--red)":st.w5?"var(--amber)":"#4ade80"}}>{st.o5?Math.abs(st.r5)+"h":st.r5+"h"}</div><div style={{fontSize:11,color:st.o5?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o5?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l5h}h<br/>Sonraki: {st.n5}h</div></div>
-            <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(500-Math.max(0,st.r5))/500*100))+"%",background:st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)"}}/></div>
-        </div>
-        <div className="card" style={{borderLeft:`3px solid ${st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}`}}>
-            <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>2000 SAAT BAKIM</div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o20?"var(--red)":st.w20?"var(--amber)":"#4ade80"}}>{st.o20?Math.abs(st.r20)+"h":st.r20+"h"}</div><div style={{fontSize:11,color:st.o20?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o20?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l20h}h<br/>Sonraki: {st.n20}h</div></div>
-            <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(2000-Math.max(0,st.r20))/2000*100))+"%",background:st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}}/></div>
-        </div>
-        <div className="card" style={{borderLeft:`3px solid ${st.ow?"var(--red)":"var(--green)"}`}}>
-            <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
-            <div style={{fontSize:14,fontWeight:700,color:st.ow?"var(--red)":"#4ade80",marginTop:3}}>{st.ow?"⚠ "+st.dw+" gün gecikmiş":st.dw<999?(30-st.dw)+" gün kalan":"Henüz yapılmadı"}</div>
-        </div>
-        {st.opn.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
-            <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({st.opn.length})</div>
-            {st.opn.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}><div style={{fontWeight:600}}>{f.desc}</div><div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.od)}</div></div>)}
+        {tab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <div className="card" style={{borderLeft:`3px solid ${st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)"}`}}>
+                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>250 SAAT BAKIM</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o2?"var(--red)":st.w2?"var(--amber)":"#4ade80"}}>{st.o2?Math.abs(st.r2)+"h":st.r2+"h"}</div><div style={{fontSize:11,color:st.o2?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o2?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l2h}h<br/>Sonraki: {st.n2}h</div></div>
+                <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(250-Math.max(0,st.r2))/250*100))+"%",background:st.o2?"var(--red)":st.w2?"var(--amber)":"var(--green)"}}/></div>
+            </div>
+            <div className="card" style={{borderLeft:`3px solid ${st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)"}`}}>
+                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>500 SAAT BAKIM</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o5?"var(--red)":st.w5?"var(--amber)":"#4ade80"}}>{st.o5?Math.abs(st.r5)+"h":st.r5+"h"}</div><div style={{fontSize:11,color:st.o5?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o5?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l5h}h<br/>Sonraki: {st.n5}h</div></div>
+                <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(500-Math.max(0,st.r5))/500*100))+"%",background:st.o5?"var(--red)":st.w5?"var(--amber)":"var(--green)"}}/></div>
+            </div>
+            <div className="card" style={{borderLeft:`3px solid ${st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}`}}>
+                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>2000 SAAT BAKIM</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div className="mono" style={{fontSize:22,fontWeight:800,color:st.o20?"var(--red)":st.w20?"var(--amber)":"#4ade80"}}>{st.o20?Math.abs(st.r20)+"h":st.r20+"h"}</div><div style={{fontSize:11,color:st.o20?"var(--red)":"var(--dim)",fontWeight:600}}>{st.o20?"GECİKMİŞ!":"kalan"}</div></div><div style={{fontSize:10,color:"var(--mute)",textAlign:"right"}}>Son: {st.l20h}h<br/>Sonraki: {st.n20}h</div></div>
+                <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(2000-Math.max(0,st.r20))/2000*100))+"%",background:st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}}/></div>
+            </div>
+            <div className="card" style={{borderLeft:`3px solid ${st.ow?"var(--red)":"var(--green)"}`}}>
+                <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
+                <div style={{fontSize:14,fontWeight:700,color:st.ow?"var(--red)":"#4ade80",marginTop:3}}>{st.ow?"⚠ "+st.dw+" gün gecikmiş":st.dw<999?(30-st.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+            </div>
+            {st.opn.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
+                <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({st.opn.length})</div>
+                {st.opn.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}><div style={{fontWeight:600}}>{f.desc}</div><div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.od)}</div></div>)}
+            </div>}
         </div>}
-    </div>}
-    {tab==="fault"&&<FaultForm sel={sel} onSubmit={handleFaultSubmit}/>}
-    {tab==="m250"&&<FormTemplate title={`250 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="var(--amber)" items={getListForType(lists,'m250',fuelType)} onSubmit={handle250} sel={sel}/>}
-    {tab==="m500"&&<FormTemplate title={`500 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="var(--blue)" items={getListForType(lists,'m500',fuelType)} onSubmit={handle500} sel={sel}/>}
-    {tab==="m2000"&&<FormTemplate title={`2000 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="#a855f7" items={getListForType(lists,'m2000',fuelType)} onSubmit={handle2000} sel={sel}/>}
-    {tab==="wk"&&<FormTemplate title={`AYLIK KONTROL ${selIsElectric?'⚡':''}`} color="var(--green)" items={getListForType(lists,'weekly',fuelType)} onSubmit={handleWk} sel={sel}/>}
-    </div>
-    );
+        {tab==="fault"&&<FaultForm sel={sel} onSubmit={handleFaultSubmit}/>}
+        {tab==="m250"&&<FormTemplate title={`250 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="var(--amber)" items={getListForType(lists,'m250',fuelType)} onSubmit={handle250} sel={sel}/>}
+        {tab==="m500"&&<FormTemplate title={`500 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="var(--blue)" items={getListForType(lists,'m500',fuelType)} onSubmit={handle500} sel={sel}/>}
+        {tab==="m2000"&&<FormTemplate title={`2000 SAAT BAKIM ${selIsElectric?'⚡':''}`} color="#a855f7" items={getListForType(lists,'m2000',fuelType)} onSubmit={handle2000} sel={sel}/>}
+        {tab==="wk"&&<FormTemplate title={`AYLIK KONTROL ${selIsElectric?'⚡':''}`} color="var(--green)" items={getListForType(lists,'weekly',fuelType)} onSubmit={handleWk} sel={sel}/>}
+        </div>
+        );
+    }
+
+    if(selTP) {
+        const tpS = getTPStatus(selTP);
+        return(
+        <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelTP(null);setTpTab("status")}}>←</button>
+                <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selTP.name}</span><TPBadge/><TPStatusBadge tp={selTP}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selTP.brand,selTP.model].filter(Boolean).join(" • ")}</div></div>
+            </div>
+
+            <div className="tabs" style={{marginBottom:12}}>
+            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Geçmiş"}].map(t=>
+                <div key={t.k} className={`tab${tpTab===t.k?" active":""}`} onClick={()=>setTpTab(t.k)}>{t.l}</div>
+            )}
+            </div>
+
+            {tpTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <div className="card" style={{borderLeft:`3px solid ${tpS.overdue?"var(--red)":"var(--green)"}`}}>
+                    <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
+                    <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+                    {tpS.last && <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
+                </div>
+                {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
+                    <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({tpS.openFaults.length})</div>
+                    {tpS.openFaults.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}>
+                        <div style={{fontWeight:600}}>{f.desc}</div>
+                        <div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.dt)}</div>
+                    </div>)}
+                </div>}
+            </div>}
+
+            {tpTab==="fault"&&<FaultForm sel={selTP} onSubmit={handleTPCheck} isTP={true} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} />}
+            
+            {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />}
+            
+            {tpTab==="history"&&<div>
+                {tpS.checks.length > 0 && <div style={{marginBottom:14}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>AYLIK KONTROLLER</div>
+                    {tpS.checks.map(c => (<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
+                        <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
+                    </div>))}
+                </div>}
+                {tpS.faults.length > 0 && <div>
+                    <div style={{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:8}}>ARIZA KAYITLARI</div>
+                    {tpS.faults.map(f => (<div key={f.id} className="card" style={{marginBottom:6,borderLeft:`3px solid ${f.st==='open'?'var(--red)':'var(--green)'}`}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
+                            <div style={{flex:1}}>
+                                <span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span>
+                                <p style={{fontSize:13,marginTop:4,lineHeight:1.5}}>{f.desc}</p>
+                                <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b> • {fd(f.dt)}</div>
+                                {f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}
+                            </div>
+                            {f.st==="open"&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
+                        </div>
+                    </div>))}
+                </div>}
+                {tpS.checks.length===0 && tpS.faults.length===0 && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
+            </div>}
+        </div>
+        );
+    }
   };
 
   const SettingsModal = () => (
@@ -918,88 +991,6 @@ function App(){
         <div style={{marginTop:20, fontSize:12, color:'var(--dim)', textAlign:'center'}}>Selectron v5.2 (Opus)</div>
       </div></div>
   );
-
-  /* TRANSPALET SAYFASI */
-  const [tpTab, setTpTab] = useState("status");
-
-  const TranspaletPage = () => {
-      if(selTP) {
-          const tpS = getTPStatus(selTP);
-          return (<div style={{maxWidth:420,margin:"0 auto",padding:16}}>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                <button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>{setSelTP(null);setTpTab("status")}}>←</button>
-                <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selTP.name}</span><TPBadge/><TPStatusBadge tp={selTP}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selTP.brand,selTP.model].filter(Boolean).join(" • ")}</div></div>
-              </div>
-
-              <div className="tabs" style={{marginBottom:12}}>
-                {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Kayıtlar"}].map(t=>
-                  <div key={t.k} className={`tab${tpTab===t.k?" active":""}`} onClick={()=>setTpTab(t.k)}>{t.l}</div>
-                )}
-              </div>
-
-              {/* DURUM */}
-              {tpTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-                <div className="card" style={{borderLeft:`3px solid ${tpS.overdue?"var(--red)":"var(--green)"}`}}>
-                  <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
-                  <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
-                  {tpS.last && <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
-                </div>
-                {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
-                  <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({tpS.openFaults.length})</div>
-                  {tpS.openFaults.map(f=><div key={f.id} style={{marginTop:6,padding:8,background:"var(--inp)",borderRadius:6,fontSize:12}}>
-                    <div style={{fontWeight:600}}>{f.desc}</div>
-                    <div style={{color:"var(--mute)",fontSize:11,marginTop:3}}>Bildiren: {f.by} • {fd(f.dt)}</div>
-                  </div>)}
-                </div>}
-              </div>}
-
-              {/* ARIZA */}
-              {tpTab==="fault"&&<TPFaultForm tp={selTP}/>}
-
-              {/* AYLIK KONTROL FORMU */}
-              {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />}
-
-              {/* GEÇMİŞ KAYITLAR */}
-              {tpTab==="history"&&<div>
-                {/* Aylık kontrol kayıtları */}
-                {tpS.checks.length > 0 && <div style={{marginBottom:14}}>
-                  <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>AYLIK KONTROLLER</div>
-                  {tpS.checks.map(c => (<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
-                    <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
-                  </div>))}
-                </div>}
-                {/* Arıza kayıtları */}
-                {tpS.faults.length > 0 && <div>
-                  <div style={{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:8}}>ARIZA KAYITLARI</div>
-                  {tpS.faults.map(f => (<div key={f.id} className="card" style={{marginBottom:6,borderLeft:`3px solid ${f.st==='open'?'var(--red)':'var(--green)'}`}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
-                      <div style={{flex:1}}>
-                        <span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e",marginBottom:4}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span>
-                        <p style={{fontSize:13,marginTop:4,lineHeight:1.5}}>{f.desc}</p>
-                        <div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b> • {fd(f.dt)}</div>
-                        {f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}
-                      </div>
-                      {f.st==="open"&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}
-                    </div>
-                  </div>))}
-                </div>}
-                {tpS.checks.length===0 && tpS.faults.length===0 && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz kayıt yok</div>}
-              </div>}
-          </div>);
-      }
-      return (<div style={{maxWidth:500,margin:"0 auto",padding:16}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-            <div><div style={{fontSize:12,color:"var(--cyan)",fontWeight:700,letterSpacing:2}}>ELEKTRİKLİ TRANSPALET</div><h2 style={{fontSize:20,fontWeight:800,marginTop:4}}>Transpalet Yönetimi</h2></div>
-            <button className="btn btn-ghost" onClick={()=>setPg("dash")}>← Ana Panel</button>
-          </div>
-          {!transpalets.length && <div className="card" style={{textAlign:"center",padding:30,color:"var(--dark)"}}>Henüz transpalet yok. Ayarlardan ekleyin.</div>}
-          {transpalets.map(tp => { const tpS = getTPStatus(tp); return (
-            <div key={tp.id} className="card" style={{marginBottom:8,cursor:"pointer",borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#ef444430":undefined}} onClick={()=>{setSelTP(tp);setTpTab("status")}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:700,display:"flex",alignItems:"center",gap:6}}>{tp.name} <TPBadge/></div><div style={{fontSize:12,color:"var(--dim)"}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div><div style={{textAlign:"right"}}><TPStatusBadge tp={tp}/><div style={{fontSize:11,color:tpS.overdue||tpS.hasFault?"var(--red)":"var(--dim)",marginTop:3,fontWeight:600}}>{tpS.hasFault?tpS.openFaults.length+" açık arıza":tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div>
-            </div>);})}
-      </div>);
-  };
 
   const AddTPModal = () => (<div className="overlay" onClick={()=>setModal(null)}><div className="card mbody" style={{border:"1px solid #06b6d430"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:18,fontWeight:800,color:"var(--cyan)"}}>🔋 Yeni Transpalet Ekle</h3><button className="btn btn-ghost btn-sm" onClick={()=>setModal(null)}>✕</button></div>
@@ -1022,7 +1013,6 @@ function App(){
   <div><label className="lbl">Model</label><input ref={flRefs.model} className="inp" placeholder="ör: 8FG25"/></div>
   <div><label className="lbl">Mevcut Saat</label><input ref={flRefs.hours} className="inp" type="number" placeholder="0"/></div>
   </div>
-  {/* YAKIT TİPİ SEÇİMİ */}
   <div style={{marginTop:10}}>
     <label className="lbl">Yakıt Tipi</label>
     <select ref={flRefs.fuel} className="inp" defaultValue="diesel">
@@ -1053,7 +1043,6 @@ function App(){
   {pg==="dash"&&<Dash/>}
   {pg==="mob"&&<Mobile/>}
   {pg==="qr"&&<QRPage/>}
-  {pg==="tp"&&<TranspaletPage/>}
   {modal==="settings" && <SettingsModal />}
   {modal==="add"&&<AddFLModal/>}
   {modal==="add_tp"&&<AddTPModal/>}
