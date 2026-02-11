@@ -156,6 +156,7 @@ const FormTemplate=({title,color,items,onSubmit,sel,noHours})=>{
     const tech=r.tech.current.value.trim();
     const date=r.date.current.value;
     if(!tech||!date)return alert("İsim ve Tarih zorunludur!");
+    if(date>TODAY_STR)return alert("İleri tarih girilemez!");
     if(!noHours){
       const hours=parseFloat(r.hours.current.value);
       if(isNaN(hours))return alert("Saat zorunludur!");
@@ -197,6 +198,7 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
     const by=r.by.current.value.trim(),desc=r.desc.current.value.trim(),date=r.date.current.value;
     const hours=isNoHours?0:parseFloat(r.hours.current?.value);
     if(!by||!desc||!date)return alert("Eksik bilgi.");
+    if(date>TODAY_STR)return alert("İleri tarih girilemez!");
     if(!isNoHours&&hours<sel.hours){
       if(!confirm("⚠️ Girdiğiniz saat ("+hours+") mevcut saatten ("+sel.hours+") düşük! Devam edilsin mi?"))return;
     }
@@ -670,6 +672,7 @@ function App(){
   const doCloseFault=(targetFault)=>{
     const by=rpRefs.by.current?.value?.trim();
     if(!by)return alert("İsim gir");
+    if(rpRefs.date.current.value>TODAY_STR)return alert("İleri tarih girilemez!");
     const date=rpRefs.date.current.value;
     sendData('repair',{flId:targetFault.fid,flName:targetFault.fn,person:by,hours:rpRefs.hours.current?.value||0,note:rpRefs.desc.current?.value,date,faultId:targetFault.id});
   };
@@ -769,6 +772,7 @@ function App(){
         <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
           const by=tpRepRefs.by.current?.value?.trim();
           if(!by)return alert("İsim gir");
+          if(tpRepRefs.date.current.value>TODAY_STR)return alert("İleri tarih girilemez!");
           closeTPFault(tpRepTgt.id,tpRepTgt.tpId,tpRepTgt.tpName,by,tpRepRefs.desc.current?.value,tpRepRefs.date.current?.value);
         }}>✅ Arızayı Kapat</button>
       </div></div></div>
@@ -784,6 +788,7 @@ function App(){
         <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
           const by=stRepRefs.by.current?.value?.trim();
           if(!by)return alert("İsim gir");
+          if(stRepRefs.date.current.value>TODAY_STR)return alert("İleri tarih girilemez!");
           closeSTFault(stRepTgt.id,stRepTgt.stId,stRepTgt.stName,by,stRepRefs.desc.current?.value,stRepRefs.date.current?.value);
         }}>✅ Arızayı Kapat</button>
       </div></div></div>
