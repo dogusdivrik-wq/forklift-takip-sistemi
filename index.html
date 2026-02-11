@@ -137,13 +137,6 @@ const FuelBadge = ({fuelType}) => {
 
 const TPBadge = () => <span className="tp-badge">🔋 Elektrikli Transpalet</span>;
 
-const getSavedTranspalets = () => JSON.parse(localStorage.getItem("opus_transpalets") || "[]");
-const saveTranspalets = (list) => localStorage.setItem("opus_transpalets", JSON.stringify(list));
-const getSavedTPChecks = () => JSON.parse(localStorage.getItem("opus_tp_checks") || "[]");
-const saveTPChecks = (list) => localStorage.setItem("opus_tp_checks", JSON.stringify(list));
-const getSavedTPFaults = () => JSON.parse(localStorage.getItem("opus_tp_faults") || "[]");
-const saveTPFaults = (list) => localStorage.setItem("opus_tp_faults", JSON.stringify(list));
-
 const ChkList=memo(function ChkList({items,chkRef}){
   const [checks,setChecks]=useState({});
   useEffect(()=>{chkRef.current=checks;},[checks]);
@@ -335,9 +328,10 @@ function App(){
   const [fuelModal, setFuelModal] = useState(null);
   const [fuelRefresh, setFuelRefresh] = useState(0);
 
-  const [transpalets, setTranspalets] = useState(getSavedTranspalets());
-  const [tpChecks, setTpChecks] = useState(getSavedTPChecks());
-  const [tpFaults, setTpFaults] = useState(getSavedTPFaults());
+  // Transpaletleri de artık LocalStorage'dan değil, Google Sheets'ten yöneteceğiz
+  const [transpalets, setTranspalets] = useState([]);
+  const [tpChecks, setTpChecks] = useState([]);
+  const [tpFaults, setTpFaults] = useState([]);
   const [selTP, setSelTP] = useState(null);
   const [tpRepTgt, setTpRepTgt] = useState(null);
   const [tpTab, setTpTab] = useState("status");
@@ -361,9 +355,14 @@ function App(){
   const processGoogleData = (rawData) => {
     const newData = { forklifts:[], faults:[], m250:[], m500:[], m2000:[], weekly:[] };
     const flMap = {};
+    const tpMap = {};
+    const newTpChecks = [];
+    const newTpFaults = [];
 
     const repairs = rawData.filter(r => r.type === 'repair');
+    const tpRepairs = rawData.filter(r => r.type === 'tp_repair');
 
+    // İlk geçiş: Forklift ve Transpalet Kayıtları
     rawData.forEach(row => {
       if(deletedIDs.includes(row.flId)) return;
       if(row.type === 'forklift_register') {
@@ -374,10 +373,18 @@ function App(){
             fuel: getFuelType(row.flId)
         };
       }
+      if(row.type === 'tp_register') {
+        tpMap[row.flId] = {
+            id: row.flId, name: row.flName, brand: row.person, model: row.note
+        };
+      }
     });
 
+    // İkinci geçiş: İşlem ve Arıza Kayıtları
     rawData.forEach(row => {
       if(deletedIDs.includes(row.flId)) return;
+      
+      // -- FORKLİFT İŞLEMLERİ --
       if(flMap[row.flId] && Number(row.hours) > flMap[row.flId].hours) {
           flMap[row.flId].hours = Number(row.hours);
       }
@@ -401,10 +408,36 @@ function App(){
           newData.faults.push({...baseRec, desc: row.note, by: row.person, st: status, od: row.timestamp, prio:'high'});
           if(status === 'open' && flMap[row.flId]) flMap[row.flId].status = 'fault';
       }
+
+      // -- TRANSPALET İŞLEMLERİ --
+      if(row.type === 'tp_monthly') {
+          newTpChecks.push({ id: row.id, tpId: row.flId, tech: row.person, dt: row.timestamp, notes: row.note, checksArr, done: checksArr.length });
+      }
+
+      if(row.type === 'tp_fault') {
+          const isRepaired = tpRepairs.some(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp));
+          const status = isRepaired ? 'closed' : 'open';
+          
+          let closedBy, closedDesc, closedDt;
+          if (isRepaired) {
+              // Son tamir kaydını bul
+              const rep = tpRepairs.filter(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp)).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
+              if(rep) { closedBy = rep.person; closedDesc = rep.note; closedDt = rep.timestamp; }
+          }
+
+          newTpFaults.push({
+              id: row.id, tpId: row.flId, tpName: row.flName, by: row.person,
+              desc: row.note, prio: 'high', dt: row.timestamp, st: status,
+              closedBy, closedDesc, closedDt
+          });
+      }
     });
 
     newData.forklifts = Object.values(flMap);
     setData(newData);
+    setTranspalets(Object.values(tpMap));
+    setTpChecks(newTpChecks);
+    setTpFaults(newTpFaults);
   };
 
   const sendData = (type, payload) => {
@@ -437,35 +470,18 @@ function App(){
       .then(resp => {
         if(resp.result === "success") {
           showToast("Kaydedildi!");
-          if(type === 'tp_monthly') {
-              const newCheck = { id: uid(), tpId: payload.flId, tech: payload.person, dt: payload.date || new Date().toISOString(), notes: payload.note, checksArr: chkStr ? chkStr.split(', ') : [], done: chkStr ? chkStr.split(', ').length : 0 };
-              const updated = [...tpChecks, newCheck]; setTpChecks(updated); saveTPChecks(updated);
-          }
-          fetchData(); setTab("status"); setModal(null); setRepTgt(null);
-          if(!['tp_monthly','tp_fault'].includes(type)) setSelTP(null);
+          fetchData(); 
+          setTab("status"); 
+          setModal(null); 
+          setRepTgt(null);
+          if(!['tp_monthly','tp_fault','tp_register','tp_repair'].includes(type)) setSelTP(null);
         } else { alert("Hata"); setLoading(false); }
       })
       .catch(e => { setLoading(false); alert("Bağlantı Hatası"); });
   };
 
-  useEffect(()=>{ fetchData(); 
-    fetch(GOOGLE_SCRIPT_URL + "?action=read").then(r=>r.json()).then(resp=>{
-        if(resp.data) {
-            const tpRecs = [];
-            resp.data.forEach(row => {
-                if(row.type === 'tp_monthly') {
-                    const checksArr = (row.checks && row.checks.trim()) ? row.checks.split(',').map(s=>s.trim()).filter(s=>s!=='') : [];
-                    tpRecs.push({ id: row.id, tpId: row.flId, tech: row.person, dt: row.timestamp, notes: row.note, checksArr, done: checksArr.length });
-                }
-            });
-            if(tpRecs.length > 0) {
-                const cur = getSavedTPChecks();
-                const ids = new Set(cur.map(c=>c.id));
-                const merged = [...cur]; tpRecs.forEach(r => { if(!ids.has(r.id)) merged.push(r); });
-                setTpChecks(merged); saveTPChecks(merged);
-            }
-        }
-    }).catch(()=>{}); 
+  useEffect(()=>{ 
+    fetchData(); 
     const p = new URLSearchParams(window.location.search);
     const qid = p.get('id');
     if(qid) setTimeout(() => { window.autoSelectId = qid; }, 2000);
@@ -531,20 +547,21 @@ function App(){
 
   const addTP = () => {
       const name = tpRefs.name.current?.value?.trim(); if(!name) return alert("Ad zorunlu.");
-      const newTP = { id: "TP-"+uid(), name, brand: tpRefs.brand.current?.value?.trim()||"", model: tpRefs.model.current?.value?.trim()||"" };
-      const updated = [...transpalets, newTP];
-      setTranspalets(updated); saveTranspalets(updated);
-      setModal(null); showToast("Transpalet Eklendi!");
+      const tpId = "TP-"+uid();
+      sendData('tp_register', {
+          flId: tpId, flName: name, 
+          person: tpRefs.brand.current?.value?.trim()||"", 
+          hours: 0, 
+          note: tpRefs.model.current?.value?.trim()||"" 
+      });
   };
 
   const deleteTranspalet = (id) => {
-      const updated = transpalets.filter(t => t.id !== id);
-      setTranspalets(updated); saveTranspalets(updated);
-      const updatedChecks = tpChecks.filter(c => c.tpId !== id);
-      setTpChecks(updatedChecks); saveTPChecks(updatedChecks);
-      const updatedFaults = tpFaults.filter(f => f.tpId !== id);
-      setTpFaults(updatedFaults); saveTPFaults(updatedFaults);
-      showToast("Transpalet Silindi");
+      const newDel = [...deletedIDs, id];
+      setDeletedIDs(newDel);
+      localStorage.setItem('deleted_fl_ids', JSON.stringify(newDel));
+      fetchData();
+      showToast("Transpalet Gizlendi (Silindi)");
   };
 
   const getTPStatus = useCallback((tp) => {
@@ -564,17 +581,12 @@ function App(){
   };
 
   const submitTPFault = (tpId, tpName, by, desc, prio, date) => {
-      const fault = { id: uid(), tpId, tpName, by, desc, prio, dt: date || new Date().toISOString(), st: 'open' };
-      const updated = [...tpFaults, fault];
-      setTpFaults(updated); saveTPFaults(updated);
       sendData('tp_fault', { flId: tpId, flName: tpName, person: by, hours: 0, note: desc, date });
       setTpTab("status");
   };
 
-  const closeTPFault = (faultId, by, desc, date) => {
-      const updated = tpFaults.map(f => f.id === faultId ? {...f, st:'closed', closedBy:by, closedDesc:desc, closedDt:date||new Date().toISOString()} : f);
-      setTpFaults(updated); saveTPFaults(updated);
-      showToast("Arıza Kapatıldı!");
+  const closeTPFault = (faultId, tpId, by, desc, date) => {
+      sendData('tp_repair', { flId: tpId, person: by, hours: 0, note: desc, date });
       setTpRepTgt(null);
   };
 
@@ -588,7 +600,7 @@ function App(){
       <div><label className="lbl">Yapılan İşlemler</label><textarea ref={tpRepRefs.desc} className="inp" placeholder="Tamir detayları..."/></div>
       <button className="btn btn-green" style={{width:"100%",justifyContent:"center"}} onClick={()=>{
           const by=tpRepRefs.by.current?.value?.trim(); if(!by) return alert("İsim gir");
-          closeTPFault(tpRepTgt.id, by, tpRepRefs.desc.current?.value, tpRepRefs.date.current?.value);
+          closeTPFault(tpRepTgt.id, tpRepTgt.tpId, by, tpRepRefs.desc.current?.value, tpRepRefs.date.current?.value);
       }}>✅ Arızayı Kapat</button>
       </div></div></div>
   );
@@ -947,7 +959,7 @@ function App(){
                 </div>}
             </div>}
 
-            {tpTab==="fault"&&<FaultForm sel={selTP} onSubmit={handleTPCheck} isTP={true} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} />}
+            {tpTab==="fault"&&<FaultForm sel={selTP} onSubmit={(data)=>submitTPFault(selTP.id, selTP.name, data.by, data.desc, data.prio, data.date)} isTP={true} />}
             
             {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true} />}
             
