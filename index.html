@@ -295,7 +295,7 @@ const FuelTypeModal = ({forklift, onClose, onSave}) => {
                 <div key={f.v} onClick={()=>setSelected(f.v)} 
                     style={{display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:10, cursor:'pointer', border:`2px solid ${selected===f.v?(f.v==='electric'?'#a855f7':'var(--amber)'):'var(--border)'}`, background:selected===f.v?(f.v==='electric'?'#a855f710':'#f59e0b08'):'var(--inp)', transition:'all .2s'}}>
                     <span style={{fontSize:20}}>{f.e}</span>
-                    <span style={{fontWeight:700, fontSize:14, color:selected===f.v?'var(--text)':'var(--dim)'}}>{f.l}</span>
+                    <span style={{fontWeight:700, fontSize:14, color:selected===f.v?'var(--text)' :'var(--dim)'}}>{f.l}</span>
                     {selected===f.v && <span style={{marginLeft:'auto', color:f.v==='electric'?'#a855f7':'var(--amber)', fontWeight:800}}>✓</span>}
                 </div>
             ))}
@@ -328,7 +328,7 @@ function App(){
   const [fuelModal, setFuelModal] = useState(null);
   const [fuelRefresh, setFuelRefresh] = useState(0);
 
-  // Transpaletleri de artık LocalStorage'dan değil, Google Sheets'ten yöneteceğiz
+  // ARTIK LOCALSTORAGE YOK, TAMAMEN GOOGLE SHEETS
   const [transpalets, setTranspalets] = useState([]);
   const [tpChecks, setTpChecks] = useState([]);
   const [tpFaults, setTpFaults] = useState([]);
@@ -362,7 +362,6 @@ function App(){
     const repairs = rawData.filter(r => r.type === 'repair');
     const tpRepairs = rawData.filter(r => r.type === 'tp_repair');
 
-    // İlk geçiş: Forklift ve Transpalet Kayıtları
     rawData.forEach(row => {
       if(deletedIDs.includes(row.flId)) return;
       if(row.type === 'forklift_register') {
@@ -380,11 +379,10 @@ function App(){
       }
     });
 
-    // İkinci geçiş: İşlem ve Arıza Kayıtları
     rawData.forEach(row => {
       if(deletedIDs.includes(row.flId)) return;
-      
-      // -- FORKLİFT İŞLEMLERİ --
+
+      // FORKLİFT İŞLEMLERİ
       if(flMap[row.flId] && Number(row.hours) > flMap[row.flId].hours) {
           flMap[row.flId].hours = Number(row.hours);
       }
@@ -409,7 +407,7 @@ function App(){
           if(status === 'open' && flMap[row.flId]) flMap[row.flId].status = 'fault';
       }
 
-      // -- TRANSPALET İŞLEMLERİ --
+      // TRANSPALET İŞLEMLERİ
       if(row.type === 'tp_monthly') {
           newTpChecks.push({ id: row.id, tpId: row.flId, tech: row.person, dt: row.timestamp, notes: row.note, checksArr, done: checksArr.length });
       }
@@ -420,7 +418,6 @@ function App(){
           
           let closedBy, closedDesc, closedDt;
           if (isRepaired) {
-              // Son tamir kaydını bul
               const rep = tpRepairs.filter(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp)).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
               if(rep) { closedBy = rep.person; closedDesc = rep.note; closedDt = rep.timestamp; }
           }
@@ -474,7 +471,7 @@ function App(){
           setTab("status"); 
           setModal(null); 
           setRepTgt(null);
-          if(!['tp_monthly','tp_fault','tp_register','tp_repair'].includes(type)) setSelTP(null);
+          if(!['tp_monthly','tp_fault','tp_repair','tp_register'].includes(type)) setSelTP(null);
         } else { alert("Hata"); setLoading(false); }
       })
       .catch(e => { setLoading(false); alert("Bağlantı Hatası"); });
