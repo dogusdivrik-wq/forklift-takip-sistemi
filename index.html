@@ -344,7 +344,6 @@ function App(){
       .then(resp=>{setLoading(false);if(resp.data)processGoogleData(resp.data);})
       .catch(e=>{setLoading(false);showToast("Bağlantı hatası");});
   };
-  const processGoogleData=(rawData)=>{
     const newData={f  const processGoogleData=(rawData)=>{
     const newData={forklifts:[],faults:[],m250:[],m500:[],m2000:[],weekly:[]};
     const flMap={};
@@ -1095,7 +1094,7 @@ function App(){
       </div>)}
     </div>
   );
-  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
+  const QRPage=()=>(<div style={{padding:24,maxWidth:1100,margin:"0 auto"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setPg("dash")}>←</button><div><h2 style={{fontSize:22,fontWeight:800}}>QR Kod / Barkod</h2><p style={{fontSize:13,color:"var(--dim)"}}>Yazdırıp ekipmanlara yapıştırın</p></div></div>
     {data.forklifts.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--amber)",marginBottom:10}}>⚙ FORKLİFTLER</div>}
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16,marginBottom:24}}>{data.forklifts.map(f=>{const fuelType=getFuelType(f.id);return <div key={f.id} className="card" style={{textAlign:"center",padding:20}}><QRCode data={"forklift://"+f.id} sz={130}/><div style={{fontWeight:800,fontSize:16,marginTop:10}}>{f.name}</div><div style={{color:"var(--dim)",fontSize:12}}>{f.brand} {f.model}</div><div style={{marginTop:4}}><FuelBadge fuelType={fuelType}/></div><div className="mono" style={{fontSize:12,color:"var(--amber)",marginTop:3}}>{f.id}</div><button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",marginTop:10}} onClick={()=>{setSel(f);setSelTP(null);setSelST(null);setPg("mob");setTab("status")}}>Mobil Aç</button></div>;})}</div>
     {transpalets.length>0&&<div style={{fontSize:13,fontWeight:700,color:"var(--cyan)",marginBottom:10}}>🔋 ELEKTRİKLİ TRANSPALETLER</div>}
