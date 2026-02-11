@@ -535,6 +535,8 @@ function App(){
     const p=new URLSearchParams(window.location.search);
     const qid=p.get('id');
     if(qid)window.autoSelectId=qid;
+    const interval=setInterval(fetchData,60000);
+    return ()=>clearInterval(interval);
   },[]);
   useEffect(()=>{
     if(window.autoSelectId&&(data.forklifts.length>0||transpalets.length>0||stackers.length>0)){
