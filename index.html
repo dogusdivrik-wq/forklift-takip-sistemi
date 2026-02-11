@@ -87,24 +87,8 @@ const fd=d=>d?new Date(d).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-dig
 const gf=t=>FUELS.find(f=>f.v===t)||{v:"diesel",l:"Dizel",e:"⛽"};
 const isElectric=(fuel)=>fuel==="electric";
 
-const getSavedLists=()=>{
-  const s=localStorage.getItem("opus_lists");
-  if(s){
-    const parsed=JSON.parse(s);
-    if(!parsed.m2000)parsed.m2000=DEF_M2000;
-    if(!parsed.em250)parsed.em250=DEF_EM250;
-    if(!parsed.em500)parsed.em500=DEF_EM500;
-    if(!parsed.em2000)parsed.em2000=DEF_EM2000;
-    if(!parsed.eweekly)parsed.eweekly=DEF_EWCHK;
-    if(!parsed.tp_monthly)parsed.tp_monthly=DEF_TP_MONTHLY;
-    if(!parsed.st_monthly)parsed.st_monthly=DEF_ST_MONTHLY;
-    return parsed;
-  }
-  return{m250:DEF_M250,m500:DEF_M500,m2000:DEF_M2000,weekly:DEF_WCHK,em250:DEF_EM250,em500:DEF_EM500,em2000:DEF_EM2000,eweekly:DEF_EWCHK,tp_monthly:DEF_TP_MONTHLY,st_monthly:DEF_ST_MONTHLY};
-};
-const getFuelTypes=()=>JSON.parse(localStorage.getItem("opus_fuel_types")||"{}");
-const saveFuelType=(flId,fuelType)=>{const ft=getFuelTypes();ft[flId]=fuelType;localStorage.setItem("opus_fuel_types",JSON.stringify(ft));};
-const getFuelType=(flId)=>getFuelTypes()[flId]||"diesel";
+const DEFAULT_LISTS={m250:DEF_M250,m500:DEF_M500,m2000:DEF_M2000,weekly:DEF_WCHK,em250:DEF_EM250,em500:DEF_EM500,em2000:DEF_EM2000,eweekly:DEF_EWCHK,tp_monthly:DEF_TP_MONTHLY,st_monthly:DEF_ST_MONTHLY};
+
 const getListForType=(lists,maintType,fuelType)=>{
   const elc=isElectric(fuelType);
   switch(maintType){
@@ -229,14 +213,17 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
   <div><label className="lbl">Açıklama</label><textarea ref={r.desc} className="inp" placeholder="Arıza nedir?"/></div>
   <button className="btn btn-red" style={{width:"100%",justifyContent:"center"}} onClick={handle}>🔴 Arıza Bildir</button>
   </div></div>);
-};const ListEditor=({onClose,onSave})=>{
-  const [lists,setLists]=useState(getSavedLists());
+};const ListEditor=({onClose,onSave,lists,sendData})=>{
+  const [localLists,setLocalLists]=useState(JSON.parse(JSON.stringify(lists)));
   const [activeTab,setActiveTab]=useState("m250");
   const [newItem,setNewItem]=useState("");
-  const currentList=lists[activeTab];
-  const add=()=>{if(newItem){setLists({...lists,[activeTab]:[...currentList,newItem]});setNewItem("");}};
-  const del=(idx)=>{setLists({...lists,[activeTab]:currentList.filter((_,i)=>i!==idx)});};
-  const save=()=>{localStorage.setItem("opus_lists",JSON.stringify(lists));onSave(lists);onClose();};
+  const currentList=localLists[activeTab]||[];
+  const add=()=>{if(newItem){setLocalLists({...localLists,[activeTab]:[...currentList,newItem]});setNewItem("");}};
+  const del=(idx)=>{setLocalLists({...localLists,[activeTab]:currentList.filter((_,i)=>i!==idx)});};
+  const save=()=>{
+    sendData('list_update',{flId:'SYSTEM',flName:'SYSTEM',person:'admin',hours:0,note:JSON.stringify(localLists)});
+    onSave(localLists);onClose();
+  };
   return(<div className="overlay" onClick={onClose}><div className="card mbody" onClick={e=>e.stopPropagation()}>
     <h3 style={{marginBottom:6}}>📝 Kontrol Listelerini Düzenle</h3>
     <div style={{fontSize:11,color:'var(--mute)',fontWeight:700,marginTop:12,marginBottom:4,letterSpacing:1}}>⛽ STANDART FORKLİFT (Dizel/Benzin/LPG/Hibrit)</div>
@@ -273,9 +260,12 @@ const FaultForm=({sel,onSubmit,isNoHours})=>{
   </div></div>);
 };
 
-const FuelTypeModal=({forklift,onClose,onSave})=>{
-  const [selected,setSelected]=useState(getFuelType(forklift.id));
-  const save=()=>{saveFuelType(forklift.id,selected);onSave();onClose();};
+const FuelTypeModal=({forklift,onClose,onSave,currentFuel,sendData})=>{
+  const [selected,setSelected]=useState(currentFuel);
+  const save=()=>{
+    sendData('fuel_type_set',{flId:forklift.id,flName:forklift.name,person:'admin',hours:0,note:selected});
+    onSave();onClose();
+  };
   return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
       <h3 style={{fontSize:16,fontWeight:700}}>Yakıt Tipi Değiştir</h3>
@@ -301,7 +291,9 @@ const FuelTypeModal=({forklift,onClose,onSave})=>{
 
 function App(){
   const [data,setData]=useState({forklifts:[],faults:[],m250:[],m500:[],m2000:[],weekly:[]});
-  const [lists,setLists]=useState(getSavedLists());
+  const [lists,setLists]=useState(DEFAULT_LISTS);
+  const [fuelTypes,setFuelTypes]=useState({});
+  const [deletedIDs,setDeletedIDs]=useState([]);
   const [pg,setPg]=useState("dash");
   const [sub,setSub]=useState("overview");
   const [sel,setSel]=useState(null);
@@ -314,10 +306,8 @@ function App(){
   const [toast,setToast]=useState(null);
   const [editFL,setEditFL]=useState(null);
   const [loading,setLoading]=useState(false);
-  const [deletedIDs,setDeletedIDs]=useState(()=>JSON.parse(localStorage.getItem('deleted_fl_ids')||"[]"));
   const [selFL,setSelFL]=useState(null);
   const [fuelModal,setFuelModal]=useState(null);
-  const [fuelRefresh,setFuelRefresh]=useState(0);
   const [transpalets,setTranspalets]=useState([]);
   const [tpChecks,setTpChecks]=useState([]);
   const [tpFaults,setTpFaults]=useState([]);
@@ -339,6 +329,8 @@ function App(){
 
   const showToast=m=>{setToast(m);setTimeout(()=>setToast(null),2e3);};
 
+  const getFuelType=(flId)=>fuelTypes[flId]||"diesel";
+
   const fetchData=()=>{
     setLoading(true);
     fetch(GOOGLE_SCRIPT_URL+"?action=read")
@@ -356,6 +348,38 @@ function App(){
     const stMap={};
     const stChecksList=[];
     const stFaultsList=[];
+
+    // 1) Önce fuel_type, delete, list kayıtlarını oku
+    const ftMap={};
+    const delIDs=[];
+    let latestLists=null;
+    let latestListsTime=0;
+
+    rawData.forEach(row=>{
+      if(row.type==='fuel_type_set'){
+        ftMap[row.flId]=row.note;
+      }
+      if(row.type==='equipment_delete'){
+        if(!delIDs.includes(row.flId))delIDs.push(row.flId);
+      }
+      if(row.type==='list_update'){
+        const t=new Date(row.timestamp).getTime();
+        if(t>latestListsTime){
+          latestListsTime=t;
+          try{latestLists=JSON.parse(row.note);}catch(e){}
+        }
+      }
+    });
+
+    setFuelTypes(ftMap);
+    setDeletedIDs(delIDs);
+    const currentLists=latestLists||DEFAULT_LISTS;
+    // Eksik anahtarları default ile doldur
+    const mergedLists={...DEFAULT_LISTS,...currentLists};
+    setLists(mergedLists);
+
+    const gft=(flId)=>ftMap[flId]||"diesel";
+
     const repairs=rawData.filter(r=>r.type==='repair');
     const tpRepairs=rawData.filter(r=>r.type==='tp_repair');
     const stRepairs=rawData.filter(r=>r.type==='st_repair');
@@ -367,9 +391,9 @@ function App(){
     const stFaultRepairMap=matchFaultsToRepairs(stFaultRows,stRepairs);
 
     rawData.forEach(row=>{
-      if(deletedIDs.includes(row.flId))return;
+      if(delIDs.includes(row.flId))return;
       if(row.type==='forklift_register'){
-        flMap[row.flId]={id:row.flId,name:row.flName,brand:row.person,model:row.note,hours:Number(row.hours),status:'active',fuel:getFuelType(row.flId)};
+        flMap[row.flId]={id:row.flId,name:row.flName,brand:row.person,model:row.note,hours:Number(row.hours),status:'active',fuel:gft(row.flId)};
       }
       if(row.type==='transpalet_register'){
         tpMap[row.flId]={id:row.flId,name:row.flName,brand:row.person,model:row.note,hours:0,status:'active',isTP:true};
@@ -380,17 +404,17 @@ function App(){
     });
 
     rawData.forEach(row=>{
-      if(deletedIDs.includes(row.flId))return;
+      if(delIDs.includes(row.flId))return;
       if(flMap[row.flId]&&Number(row.hours)>flMap[row.flId].hours){
         flMap[row.flId].hours=Number(row.hours);
       }
       const checksArr=(row.checks&&row.checks.trim())?row.checks.split(',').map(s=>s.trim()).filter(s=>s!==''):[];
       const baseRec={id:row.id,fid:row.flId,fn:row.flName,h:Number(row.hours),notes:row.note,dt:row.timestamp,done:checksArr.length,checksArr:checksArr};
 
-      if(row.type==='m250')newData.m250.push({...baseRec,tech:row.person,tot:getListForType(lists,'m250',getFuelType(row.flId)).length});
-      if(row.type==='m500')newData.m500.push({...baseRec,tech:row.person,tot:getListForType(lists,'m500',getFuelType(row.flId)).length});
-      if(row.type==='m2000')newData.m2000.push({...baseRec,tech:row.person,tot:getListForType(lists,'m2000',getFuelType(row.flId)).length});
-      if(row.type==='weekly')newData.weekly.push({...baseRec,tech:row.person,tot:getListForType(lists,'weekly',getFuelType(row.flId)).length});
+      if(row.type==='m250')newData.m250.push({...baseRec,tech:row.person,tot:getListForType(mergedLists,'m250',gft(row.flId)).length});
+      if(row.type==='m500')newData.m500.push({...baseRec,tech:row.person,tot:getListForType(mergedLists,'m500',gft(row.flId)).length});
+      if(row.type==='m2000')newData.m2000.push({...baseRec,tech:row.person,tot:getListForType(mergedLists,'m2000',gft(row.flId)).length});
+      if(row.type==='weekly')newData.weekly.push({...baseRec,tech:row.person,tot:getListForType(mergedLists,'weekly',gft(row.flId)).length});
 
       if(row.type==='fault'){
         const repairLog=faultRepairMap[row.id]||null;
@@ -497,23 +521,32 @@ function App(){
     const n2=l2h+250,n5=l5h+500,n20=l20h+2000,r2=n2-f.hours,r5=n5-f.hours,r20=n20-f.hours;
     const dw=ws[0]?Math.floor((Date.now()-new Date(ws[0].dt).getTime())/864e5):999;
     return{l2:m2[0],l5:m5[0],l20:m20[0],lw:ws[0],l2h,l5h,l20h,n2,n5,n20,r2,r5,r20,o2:r2<=0,o5:r5<=0,o20:r20<=0,w2:r2>0&&r2<=30,w5:r5>0&&r5<=50,w20:r20>0&&r20<=200,dw,ow:dw>30,opn,allF:fts,inF:opn.length>0||f.status==="fault"};
-  },[data,lists,fuelRefresh]);
+  },[data,fuelTypes]);
 
   const deleteEquipment=(id,type)=>{
-    const newDel=[...deletedIDs,id];
-    setDeletedIDs(newDel);
-    localStorage.setItem('deleted_fl_ids',JSON.stringify(newDel));
-    fetchData();
-    showToast(type+" Gizlendi (Silindi)");
+    sendData('equipment_delete',{flId:id,flName:type,person:'admin',hours:0,note:'deleted'});
+    showToast(type+" Silindi");
   };
 
   const addFL=()=>{
     const name=flRefs.name.current?.value?.trim();if(!name)return alert("Ad zorunlu.");
     const flId="FL-"+uid();
     const fuelType=flRefs.fuel.current?.value||"diesel";
-    saveFuelType(flId,fuelType);
-    sendData('forklift_register',{flId:flId,flName:name,person:flRefs.brand.current.value.trim(),hours:parseFloat(flRefs.hours.current.value)||0,note:flRefs.model.current.value.trim()});
-    setModal(null);
+    // Önce forklift kaydet, sonra yakıt tipi kaydet
+    setLoading(true);
+    const d1=new FormData();
+    d1.append("action","write");d1.append("id",uid());d1.append("type","forklift_register");
+    d1.append("flId",flId);d1.append("flName",name);d1.append("person",flRefs.brand.current.value.trim());
+    d1.append("hours",parseFloat(flRefs.hours.current.value)||0);d1.append("note",flRefs.model.current.value.trim());d1.append("checks","");
+    fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d1}).then(r=>r.json()).then(()=>{
+      const d2=new FormData();
+      d2.append("action","write");d2.append("id",uid());d2.append("type","fuel_type_set");
+      d2.append("flId",flId);d2.append("flName",name);d2.append("person","admin");
+      d2.append("hours",0);d2.append("note",fuelType);d2.append("checks","");
+      return fetch(GOOGLE_SCRIPT_URL,{method:"POST",body:d2});
+    }).then(r=>r.json()).then(()=>{
+      showToast("Forklift Eklendi!");fetchData();setModal(null);
+    }).catch(()=>{setLoading(false);alert("Hata");});
   };
 
   const addTP=()=>{
@@ -542,9 +575,7 @@ function App(){
   const handleSTCheck=({tech,hours,notes,chk,date})=>{
     sendData('st_monthly',{flId:selST.id,flName:selST.name,person:tech,hours:0,note:notes,chk,date});
     setStTab("status");
-  };
-
-  const getTPStatus=useCallback((tp)=>{
+  };  const getTPStatus=useCallback((tp)=>{
     const checks=tpChecks.filter(c=>c.tpId===tp.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
     const last=checks[0];
     const dw=last?Math.floor((Date.now()-new Date(last.dt).getTime())/864e5):999;
@@ -800,54 +831,24 @@ function App(){
               <div className="mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK</div><div style={{fontSize:14,fontWeight:700,color:s.ow?"var(--red)":"#4ade80",marginTop:3}}>{s.ow?s.dw+" gün gecikmiş":s.dw<999?(30-s.dw)+" gün kalan":"Yapılmadı"}</div></div>
             </div>
           </div>);})}
-
-          {tpList.map(tp=>{
-            const tpS=getTPStatus(tp);
-            return(
-              <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-                  <div>
-                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                      <h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3>
-                      <TPBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span>
-                      <StatusBadge s={tpS}/>
-                    </div>
-                    <div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div>
-                  </div>
-                </div>
-                <div className="g-auto" style={{marginTop:14}}>
-                  <div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}>
-                    <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div>
-                    <div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div>
-                  </div>
-                </div>
+          {tpList.map(tp=>{const tpS=getTPStatus(tp);return(
+            <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+                <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3><TPBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span><StatusBadge s={tpS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div>
               </div>
-            );
-          })}
-
-          {stList.map(st=>{
-            const stS=getSTStatus(st);
-            return(
-              <div key={st.id} className="card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-                  <div>
-                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                      <h3 style={{fontSize:17,fontWeight:800}}>{st.name}</h3>
-                      <STBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span>
-                      <StatusBadge s={stS}/>
-                    </div>
-                    <div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div>
-                  </div>
-                </div>
-                <div className="g-auto" style={{marginTop:14}}>
-                  <div className="mcard" style={{borderLeftColor:stS.overdue?"var(--red)":"var(--green)"}}>
-                    <div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div>
-                    <div style={{fontSize:14,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{stS.overdue?stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Yapılmadı"}</div>
-                  </div>
-                </div>
+              <div className="g-auto" style={{marginTop:14}}>
+                <div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div>
               </div>
-            );
-          })}
+            </div>);})}
+          {stList.map(st=>{const stS=getSTStatus(st);return(
+            <div key={st.id} className="card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+                <div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{st.name}</h3><STBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span><StatusBadge s={stS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div></div>
+              </div>
+              <div className="g-auto" style={{marginTop:14}}>
+                <div className="mcard" style={{borderLeftColor:stS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{stS.overdue?stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Yapılmadı"}</div></div>
+              </div>
+            </div>);})}
           </>
         );
       })()}
@@ -1202,7 +1203,7 @@ function App(){
         <button className="btn btn-cyan" onClick={()=>{setModal('add_tp')}}>+ Yeni Transpalet Ekle</button>
         <button className="btn btn-pink" onClick={()=>{setModal('add_st')}}>+ Yeni İstif Makinesi Ekle</button>
       </div>
-      <div style={{marginTop:20,fontSize:12,color:'var(--dim)',textAlign:'center'}}>Selectron v5.3 (Opus)</div>
+      <div style={{marginTop:20,fontSize:12,color:'var(--dim)',textAlign:'center'}}>Selectron v6.0 — Cloud Sync</div>
     </div></div>
   );
 
@@ -1259,14 +1260,14 @@ function App(){
   {modal==="add"&&<AddFLModal/>}
   {modal==="add_tp"&&<AddTPModal/>}
   {modal==="add_st"&&<AddSTModal/>}
-  {modal==="list_edit"&&<ListEditor onClose={()=>setModal("settings")} onSave={setLists}/>}
+  {modal==="list_edit"&&<ListEditor onClose={()=>setModal("settings")} onSave={setLists} lists={lists} sendData={sendData}/>}
   <RepairModal/>
   <TPRepairModal/>
   <STRepairModal/>
   {editFL&&<EditEquipmentModal/>}
   {detailModal&&<MaintDetail type={detailModal.type} record={detailModal.record} onClose={()=>setDetailModal(null)}/>}
   {confirmDel&&<Confirm msg={confirmDel.msg} onYes={()=>{if(confirmDel.type==="Transpalet"||confirmDel.type==="İstif Makinesi"||confirmDel.type==="Forklift"){deleteEquipment(confirmDel.id,confirmDel.type)}setConfirmDel(null);}} onNo={()=>setConfirmDel(null)}/>}
-  {fuelModal&&<FuelTypeModal forklift={fuelModal} onClose={()=>setFuelModal(null)} onSave={()=>{setFuelRefresh(p=>p+1);fetchData();}}/>}
+  {fuelModal&&<FuelTypeModal forklift={fuelModal} onClose={()=>setFuelModal(null)} onSave={()=>fetchData()} currentFuel={getFuelType(fuelModal.id)} sendData={sendData}/>}
   </div>);
 }
 ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
