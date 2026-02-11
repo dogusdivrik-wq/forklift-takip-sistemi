@@ -846,15 +846,16 @@ function App(){
       
 
       if(row.type === 'fault') {
-
           const isRepaired = repairs.some(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp));
-
+          const repairLog = isRepaired ? repairs.find(rep => rep.flId === row.flId && new Date(rep.timestamp) > new Date(row.timestamp)) : null;
           const status = isRepaired ? 'closed' : 'open';
-
-          newData.faults.push({...baseRec, desc: row.note, by: row.person, st: status, od: row.timestamp, prio:'high'});
-
+          newData.faults.push({
+              ...baseRec, desc: row.note, by: row.person, st: status, od: row.timestamp, prio:'high',
+              closedBy: repairLog ? repairLog.person : null, 
+              closedDesc: repairLog ? repairLog.note : null, 
+              closedDt: repairLog ? repairLog.timestamp : null
+          });
           if(status === 'open' && flMap[row.flId]) flMap[row.flId].status = 'fault';
-
       }
 
 
@@ -1815,7 +1816,7 @@ const RepairModal = () => repTgt && !repTgt.isTP && !repTgt.isST && (
 
           if(!all.length)return<div className="card" style={{textAlign:"center",padding:40,color:"var(--dark)"}}>Arıza kaydı yok</div>;
 
-          return all.map(f=><div key={f.id} className="card" style={{marginBottom:8,borderLeft:`3px solid ${f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)"}`}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{f.fn}</span>{f.isTP&&<TPBadge/>}{f.isST&&<STBadge/>}<span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span></div><p style={{fontSize:13,marginTop:6,lineHeight:1.5}}>{f.desc}</p><div style={{fontSize:11,color:"var(--mute)",marginTop:6}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b>{(!f.isTP&&!f.isST)&&(" • Saat: "+f.h+"h")} • {fd(f.od)}</div>{(f.isTP||f.isST)&&f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}</div><div style={{display:"flex",flexDirection:"column",gap:4}}>{f.st==="open"&&(!f.isTP&&!f.isST)&&<button className="btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isTP&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isST&&<button className="btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}</div></div></div>);
+return all.map(f=><div key={f.id} className="card" style={{marginBottom:8,borderLeft:`3px solid ${f.st==="open"?(PRIO[f.prio]?.c||"#fbbf24"):"var(--green)"}`}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{f.fn}</span>{f.isTP&&<TPBadge/>}{f.isST&&<STBadge/>}<span className="badge" style={{background:f.st==="open"?"#ef444420":"#22c55e20",color:f.st==="open"?"#ef4444":"#22c55e"}}>{f.st==="open"?"🔴 AÇIK":"✅ KAPALI"}</span></div><p style={{fontSize:13,marginTop:6,lineHeight:1.5}}>{f.desc}</p><div style={{fontSize:11,color:"var(--mute)",marginTop:6}}>Bildiren: <b style={{color:"var(--dim)"}}>{f.by}</b>{(!f.isTP&&!f.isST)&&(" • Saat: "+f.h+"h")} • {fd(f.od)}</div>{f.st==='closed'&&<div style={{fontSize:11,color:"var(--green)",marginTop:3}}>Kapatan: {f.closedBy} • {fd(f.closedDt)}{f.closedDesc&&(' — '+f.closedDesc)}</div>}</div><div style={{display:"flex",flexDirection:"column",gap:4}}>{f.st==="open"&&(!f.isTP&&!f.isST)&&<button className="btn btn-green btn-sm" onClick={()=>setRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isTP&&<button className="btn btn-green btn-sm" onClick={()=>setTpRepTgt(f)}>🔧 Kapat</button>}{f.st==="open"&&f.isST&&<button className="btn btn-green btn-sm" onClick={()=>setStRepTgt(f)}>🔧 Kapat</button>}</div></div></div>);
 
       })()}
 
