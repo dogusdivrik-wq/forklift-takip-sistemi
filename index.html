@@ -681,7 +681,6 @@ function App(){
       </div></div></div>
   );
 
-  // BURAYA YAPIŞTIRACAKSIN
   const RepairModal = () => repTgt && !repTgt.isTP && !repTgt.isST && (
       <div className="overlay" onClick={()=>setRepTgt(null)}><div className="card mbody" style={{border:"1px solid #22c55e30"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>🔧 Forklift Arıza Kapat</h3><button className="btn btn-ghost btn-sm" onClick={()=>setRepTgt(null)}>✕</button></div>
@@ -698,11 +697,49 @@ function App(){
       </div></div></div>
   );
 
-  // KODUN BURADAN SONRA ZATEN BÖYLE DEVAM EDİYOR
   const EditEquipmentModal = () => {
-      if (!editFL) return null;
-      const isTP = editFL.isTP;
-  const EditEquipmentModal = () => {
+    if (!editFL) return null;
+    const isTP = editFL.isTP;
+    const isST = editFL.isST;
+    const isSmall = isTP || isST;
+    const r = { name: useRef(), brand: useRef(), model: useRef(), hours: useRef() };
+
+    const handleSave = () => {
+      const name = r.name.current?.value?.trim();
+      if (!name) return alert("Ad zorunlu.");
+      const brand = r.brand.current?.value?.trim() || "";
+      const model = r.model.current?.value?.trim() || "";
+      const hours = isSmall ? 0 : parseFloat(r.hours.current?.value) || 0;
+
+      if (isTP) { sendData('transpalet_register', { flId: editFL.id, flName: name, person: brand, note: model, hours: 0 }); }
+      else if (isST) { sendData('stacker_register', { flId: editFL.id, flName: name, person: brand, note: model, hours: 0 }); }
+      else { sendData('forklift_register', { flId: editFL.id, flName: name, person: brand, note: model, hours: hours }); }
+      setEditFL(null);
+    };
+
+    return (
+      <div className="overlay" onClick={() => setEditFL(null)}>
+        <div className="card mbody" style={{border: `1px solid ${isTP ? 'var(--cyan)' : isST ? 'var(--pink)' : 'var(--amber)'}`}} onClick={e => e.stopPropagation()}>
+          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14}}>
+            <h3 style={{fontSize: 18, fontWeight: 800, color: isTP ? "var(--cyan)" : isST ? "var(--pink)" : "var(--amber)"}}>
+              ✏️ {isTP ? 'Transpalet Düzenle' : isST ? 'İstif Makinesi Düzenle' : 'Forklift Düzenle'}
+            </h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => setEditFL(null)}>✕</button>
+          </div>
+          <div className="grid-2">
+            <div><label className="lbl">Ad *</label><input ref={r.name} className="inp" defaultValue={editFL.name}/></div>
+            <div><label className="lbl">Marka</label><input ref={r.brand} className="inp" defaultValue={editFL.brand}/></div>
+            <div><label className="lbl">Model</label><input ref={r.model} className="inp" defaultValue={editFL.model}/></div>
+            {!isSmall && <div><label className="lbl">Saat (Güncelle)</label><input ref={r.hours} className="inp" type="number" defaultValue={editFL.hours}/></div>}
+          </div>
+          <div style={{marginTop: 14, fontSize: 11, color: "var(--dim)"}}>Not: Ekipman ID'si ({editFL.id}) aynı kalacak.</div>
+          <button className={`btn ${isTP ? 'btn-cyan' : isST ? 'btn-pink' : 'btn-amber'}`} style={{width: "100%", justifyContent: "center", marginTop: 14}} onClick={handleSave}>
+            💾 Değişiklikleri Kaydet
+          </button>
+        </div>
+      </div>
+    );
+  };
     if (!editFL) return null;
     const isTP = editFL.isTP;
     const isST = editFL.isST;
