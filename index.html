@@ -235,13 +235,13 @@ const ListEditor=({onClose,onSave,lists,sendData})=>{
     <h3 style={{marginBottom:6}}>📝 Kontrol Listelerini Düzenle</h3>
     <div style={{fontSize:11,color:'var(--mute)',fontWeight:700,marginTop:12,marginBottom:4,letterSpacing:1}}>⛽ STANDART FORKLİFT (Dizel/Benzin/LPG/Hibrit)</div>
     <div className="tabs" style={{marginBottom:6}}>
-      {[{k:'m250',l:'250h'},{k:'m500',l:'500h'},{k:'m2000',l:'2000h'},{k:'weekly',l:'Aylık'}].map(t=>(
+      {[{k:'m250',l:'250h'},{k:'m500',l:'500h'},{k:'m2000',l:'2000h'},{k:'weekly',l:'Haftalık'}].map(t=>(
         <div key={t.k} className={`tab ${activeTab===t.k?'active':''}`} onClick={()=>setActiveTab(t.k)}>{t.l}</div>
       ))}
     </div>
     <div style={{fontSize:11,color:'#c084fc',fontWeight:700,marginTop:8,marginBottom:4,letterSpacing:1}}>⚡ ELEKTRİKLİ FORKLİFT</div>
     <div className="tabs" style={{marginBottom:6}}>
-      {[{k:'em250',l:'250h'},{k:'em500',l:'500h'},{k:'em2000',l:'2000h'},{k:'eweekly',l:'Aylık'}].map(t=>(
+      {[{k:'em250',l:'250h'},{k:'em500',l:'500h'},{k:'em2000',l:'2000h'},{k:'eweekly',l:'Haftalık'}].map(t=>(
         <div key={t.k} className={`tab ${activeTab===t.k?'active':''}`} style={activeTab===t.k?{background:'#a855f7',color:'#fff'}:{}} onClick={()=>setActiveTab(t.k)}>{t.l}</div>
       ))}
     </div>
@@ -252,7 +252,7 @@ const ListEditor=({onClose,onSave,lists,sendData})=>{
     </div>
     <div style={{fontSize:12,fontWeight:700,color:activeTab==='tp_monthly'?'#22d3ee':activeTab==='st_monthly'?'var(--pink)':activeTab.startsWith('e')?'#c084fc':'var(--amber)',marginBottom:8,display:'flex',alignItems:'center',gap:6}}>
       <span>{activeTab==='tp_monthly'?'🔋 ':activeTab==='st_monthly'?'🏗️ ':activeTab.startsWith('e')?'⚡ ':'⛽ '}</span>
-      <span>{activeTab==='tp_monthly'?'Transpalet — Aylık Kontrol':activeTab==='st_monthly'?'İstif Makinesi — Aylık Kontrol':(activeTab.startsWith('e')?'Elektrikli':'Standart')+' — '+activeTab.replace('e','').replace('weekly','Aylık').replace('m','').replace('250','250 Saat').replace('500','500 Saat').replace('2000','2000 Saat')}</span>
+      <span>{activeTab==='tp_monthly'?'Transpalet — Haftalık Kontrol':activeTab==='st_monthly'?'İstif Makinesi — Haftalık Kontrol':(activeTab.startsWith('e')?'Elektrikli':'Standart')+' — '+activeTab.replace('e','').replace('weekly','Haftalık').replace('m','').replace('250','250 Saat').replace('500','500 Saat').replace('2000','2000 Saat')}</span>
       <span style={{marginLeft:'auto',fontSize:11,color:'var(--dim)'}}>{currentList.length} madde</span>
     </div>
     <div style={{display:'flex',gap:5,marginBottom:10}}>
@@ -562,7 +562,7 @@ function App(){
     const l2h=m2[0]?.h||0,l5h=m5[0]?.h||0,l20h=m20[0]?.h||0;
     const n2=l2h+250,n5=l5h+500,n20=l20h+2000,r2=n2-f.hours,r5=n5-f.hours,r20=n20-f.hours;
     const dw=ws[0]?Math.floor((Date.now()-new Date(ws[0].dt).getTime())/864e5):999;
-    return{l2:m2[0],l5:m5[0],l20:m20[0],lw:ws[0],l2h,l5h,l20h,n2,n5,n20,r2,r5,r20,o2:r2<=0,o5:r5<=0,o20:r20<=0,w2:r2>0&&r2<=30,w5:r5>0&&r5<=50,w20:r20>0&&r20<=200,dw,ow:dw>30,opn,allF:fts,inF:opn.length>0||f.status==="fault"};
+    return{l2:m2[0],l5:m5[0],l20:m20[0],lw:ws[0],l2h,l5h,l20h,n2,n5,n20,r2,r5,r20,o2:r2<=0,o5:r5<=0,o20:r20<=0,w2:r2>0&&r2<=30,w5:r5>0&&r5<=50,w20:r20>0&&r20<=200,dw,ow:dw>7,opn,allF:fts,inF:opn.length>0||f.status==="fault"};
   },[data,fuelTypes]);
   const deleteEquipment=(id,type)=>{
     sendData('equipment_delete',{flId:id,flName:type,person:'admin',hours:0,note:'deleted'});
@@ -638,7 +638,7 @@ function App(){
     const dw=last?Math.floor((Date.now()-new Date(last.dt).getTime())/864e5):999;
     const faults=tpFaults.filter(f=>f.tpId===tp.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
     const openFaults=faults.filter(f=>f.st==='open');
-    return{last,dw,overdue:dw>30,checks,faults,openFaults,hasFault:openFaults.length>0};
+    return{last,dw,overdue:dw>7,checks,faults,openFaults,hasFault:openFaults.length>0};
   },[tpChecks,tpFaults]);
   const getSTStatus=useCallback((st)=>{
     const checks=stChecks.filter(c=>c.stId===st.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
@@ -646,7 +646,7 @@ function App(){
     const dw=last?Math.floor((Date.now()-new Date(last.dt).getTime())/864e5):999;
     const faults=stFaults.filter(f=>f.stId===st.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
     const openFaults=faults.filter(f=>f.st==='open');
-    return{last,dw,overdue:dw>30,checks,faults,openFaults,hasFault:openFaults.length>0};
+    return{last,dw,overdue:dw>7,checks,faults,openFaults,hasFault:openFaults.length>0};
   },[stChecks,stFaults]);
   const StatusBadge=({s})=>{
     if(s.hasFault)return <span className="badge" style={{background:"#ef444425",color:"#ef4444"}}>🔴 ARIZALI</span>;
@@ -697,7 +697,7 @@ function App(){
     const doneItems=record.checksArr||[];
     return(<div className="overlay" onClick={onClose}><div className="card mbody" style={{border:"1px solid "+color+"40"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <h3 style={{fontSize:16,fontWeight:700,color:color}}>{isTP?'TRANSPALET AYLIK KONTROL DETAYI':isST?'İSTİF MAKİNESİ KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
+        <h3 style={{fontSize:16,fontWeight:700,color:color}}>{isTP?'TRANSPALET Haftalık KONTROL DETAYI':isST?'İSTİF MAKİNESİ KONTROL DETAYI':type.toUpperCase()+' DETAYI'}</h3><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
       <div style={{marginBottom:12}}>
         <div className="dr"><span className="dl">{isTP?'Transpalet':isST?'İstif Mak.':'Forklift'}</span><span className="dv" style={{fontWeight:700}}>{record.fn} {isTP?<TPBadge/>:isST?<STBadge/>:<FuelBadge fuelType={fuelType}/>}</span></div>
         <div className="dr"><span className="dl">Personel</span><span className="dv">{record.tech||"—"}</span></div>
@@ -899,7 +899,7 @@ function App(){
         )}
       </div>
       <div className="tabs" style={{marginBottom:18,maxWidth:800}}>
-        {[{k:"overview",l:"Genel Bakış"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Aylık"},{k:"fleet",l:"🔒 Filo Yönetimi"}].map(t=>
+        {[{k:"overview",l:"Genel Bakış"},{k:"faults",l:"Arızalar"},{k:"maint",l:"Bakım Kayıtları"},{k:"weekly",l:"Haftalık"},{k:"fleet",l:"🔒 Filo Yönetimi"}].map(t=>
           <div key={t.k} className={`tab${sub===t.k?" active":""}`} onClick={()=>{
             if(t.k==="fleet"){checkPassword(()=>setSub(t.k));}else{setSub(t.k);}
           }} style={{fontSize:12}}>{t.l}</div>
@@ -923,13 +923,13 @@ function App(){
                   <div className="mcard" style={{borderLeftColor:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>250 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o2?"var(--red)":s.w2?"var(--amber)":"#4ade80",marginTop:3}}>{s.o2?Math.abs(s.r2)+"h GECİKMİŞ":s.r2+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(250-Math.max(0,s.r2))/250*100)+"%",background:s.o2?"var(--red)":s.w2?"var(--amber)":"var(--green)"}}/></div><div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className="mono" style={{color:"var(--text)"}}>{s.n2}h</b>'de</div></div>
                   <div className="mcard" style={{borderLeftColor:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>500 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o5?"var(--red)":s.w5?"var(--amber)":"#4ade80",marginTop:3}}>{s.o5?Math.abs(s.r5)+"h GECİKMİŞ":s.r5+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(500-Math.max(0,s.r5))/500*100)+"%",background:s.o5?"var(--red)":s.w5?"var(--amber)":"var(--green)"}}/></div><div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className="mono" style={{color:"var(--text)"}}>{s.n5}h</b>'de</div></div>
                   <div className="mcard" style={{borderLeftColor:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>2000 SAAT</div><div style={{fontSize:14,fontWeight:700,color:s.o20?"var(--red)":s.w20?"var(--amber)":"#4ade80",marginTop:3}}>{s.o20?Math.abs(s.r20)+"h GECİKMİŞ":s.r20+"h kalan"}</div><div className="prog"><div className="pfill" style={{width:Math.min(100,(2000-Math.max(0,s.r20))/2000*100)+"%",background:s.o20?"var(--red)":s.w20?"var(--amber)":"var(--green)"}}/></div><div style={{fontSize:10,color:"var(--mute)",marginTop:4}}>Sonraki bakım: <b className="mono" style={{color:"var(--text)"}}>{s.n20}h</b>'de</div></div>
-                  <div className="mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK</div><div style={{fontSize:14,fontWeight:700,color:s.ow?"var(--red)":"#4ade80",marginTop:3}}>{s.ow?s.dw+" gün gecikmiş":s.dw<999?(30-s.dw)+" gün kalan":"Yapılmadı"}</div></div>
+                  <div className="mcard" style={{borderLeftColor:s.ow?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>Haftalık</div><div style={{fontSize:14,fontWeight:700,color:s.ow?"var(--red)":"#4ade80",marginTop:3}}>{s.ow?s.dw+" gün gecikmiş":s.dw<999?(7-s.dw)+" gün kalan":"Yapılmadı"}</div></div>
                 </div>
               </div>);})}
             {tpList.map(tp=>{const tpS=getTPStatus(tp);return(
-              <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}><div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3><TPBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span><StatusBadge s={tpS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div></div><div className="g-auto" style={{marginTop:14}}><div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div></div>);})}
+              <div key={tp.id} className="card" style={{marginBottom:12,borderColor:tpS.hasFault?"#ef444440":tpS.overdue?"#f59e0b25":undefined}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}><div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{tp.name}</h3><TPBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{tp.id}</span><StatusBadge s={tpS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[tp.brand,tp.model].filter(Boolean).join(" • ")}</div></div></div><div className="g-auto" style={{marginTop:14}}><div className="mcard" style={{borderLeftColor:tpS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>Haftalık KONTROL</div><div style={{fontSize:14,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{tpS.overdue?tpS.dw+" gün gecikmiş":tpS.dw<999?(7-tpS.dw)+" gün kalan":"Yapılmadı"}</div></div></div></div>);})}
             {stList.map(st=>{const stS=getSTStatus(st);return(
-              <div key={st.id} className="card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}><div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{st.name}</h3><STBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span><StatusBadge s={stS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div></div></div><div className="g-auto" style={{marginTop:14}}><div className="mcard" style={{borderLeftColor:stS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>AYLIK KONTROL</div><div style={{fontSize:14,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{stS.overdue?stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Yapılmadı"}</div></div></div></div>);})}
+              <div key={st.id} className="card" style={{marginBottom:12,borderColor:stS.hasFault?"#ef444440":stS.overdue?"#f59e0b25":undefined}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}><div><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><h3 style={{fontSize:17,fontWeight:800}}>{st.name}</h3><STBadge/><span className="mono" style={{fontSize:11,color:"var(--mute)"}}>{st.id}</span><StatusBadge s={stS}/></div><div style={{fontSize:12,color:"var(--dim)",marginTop:2}}>{[st.brand,st.model].filter(Boolean).join(" • ")}</div></div></div><div className="g-auto" style={{marginTop:14}}><div className="mcard" style={{borderLeftColor:stS.overdue?"var(--red)":"var(--green)"}}><div style={{fontSize:10,color:"var(--mute)",fontWeight:700}}>Haftalık KONTROL</div><div style={{fontSize:14,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:3}}>{stS.overdue?stS.dw+" gün gecikmiş":stS.dw<999?(7-stS.dw)+" gün kalan":"Yapılmadı"}</div></div></div></div>);})}
           </>);
       })()}      {sub==="faults"&&(()=>{
         let fs=data.faults.filter(f=>selFL?f.fid===selFL:true).sort((a,b)=>new Date(b.od)-new Date(a.od));
@@ -1110,7 +1110,7 @@ function App(){
         <div style={{maxWidth:420,margin:"0 auto",padding:16}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><button className="btn btn-ghost" style={{padding:"5px 8px"}} onClick={()=>setSel(null)}>←</button><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{sel.name}</span><FuelBadge fuelType={fuelType}/><Badge f={sel}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[sel.brand,sel.model].filter(Boolean).join(" • ")} • {sel.hours}h</div></div></div>
           <div className="tabs" style={{marginBottom:12}}>
-            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"m250",l:"250h"},{k:"m500",l:"500h"},{k:"m2000",l:"2000h"},{k:"wk",l:"Aylık"}].map(t=>
+            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"m250",l:"250h"},{k:"m500",l:"500h"},{k:"m2000",l:"2000h"},{k:"wk",l:"Haftalık"}].map(t=>
               <div key={t.k} className={`tab${tab===t.k?" active":""}`} onClick={()=>setTab(t.k)}>{t.l}</div>)}
           </div>
           {tab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1130,8 +1130,8 @@ function App(){
               <div className="prog"><div className="pfill" style={{width:Math.min(100,Math.max(0,(2000-Math.max(0,st.r20))/2000*100))+"%",background:st.o20?"var(--red)":st.w20?"var(--amber)":"var(--green)"}}/></div>
             </div>
             <div className="card" style={{borderLeft:"3px solid "+(st.ow?"var(--red)":"var(--green)")}}>
-              <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
-              <div style={{fontSize:14,fontWeight:700,color:st.ow?"var(--red)":"#4ade80",marginTop:3}}>{st.ow?"⚠ "+st.dw+" gün gecikmiş":st.dw<999?(30-st.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+              <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>Haftalık KONTROL</div>
+              <div style={{fontSize:14,fontWeight:700,color:st.ow?"var(--red)":"#4ade80",marginTop:3}}>{st.ow?"⚠ "+st.dw+" gün gecikmiş":st.dw<999?(7-st.dw)+" gün kalan":"Henüz yapılmadı"}</div>
             </div>
             {st.opn.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
               <div style={{fontSize:10,color:"var(--red)",fontWeight:700}}>🔴 AÇIK ARIZALAR ({st.opn.length})</div>
@@ -1154,7 +1154,7 @@ function App(){
           {tab==="m250"&&<FormTemplate title={"250 SAAT BAKIM"+(selIsElectric?" ⚡":"")} color="var(--amber)" items={getListForType(lists,'m250',fuelType)} onSubmit={handle250} sel={sel}/>}
           {tab==="m500"&&<FormTemplate title={"500 SAAT BAKIM"+(selIsElectric?" ⚡":"")} color="var(--blue)" items={getListForType(lists,'m500',fuelType)} onSubmit={handle500} sel={sel}/>}
           {tab==="m2000"&&<FormTemplate title={"2000 SAAT BAKIM"+(selIsElectric?" ⚡":"")} color="#a855f7" items={getListForType(lists,'m2000',fuelType)} onSubmit={handle2000} sel={sel}/>}
-          {tab==="wk"&&<FormTemplate title={"AYLIK KONTROL"+(selIsElectric?" ⚡":"")} color="var(--green)" items={getListForType(lists,'weekly',fuelType)} onSubmit={handleWk} sel={sel}/>}
+          {tab==="wk"&&<FormTemplate title={"Haftalık KONTROL"+(selIsElectric?" ⚡":"")} color="var(--green)" items={getListForType(lists,'weekly',fuelType)} onSubmit={handleWk} sel={sel}/>}
         </div>
       );
     }
@@ -1167,14 +1167,14 @@ function App(){
             <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selTP.name}</span><TPBadge/><StatusBadge s={tpS}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selTP.brand,selTP.model].filter(Boolean).join(" • ")}</div></div>
           </div>
           <div className="tabs" style={{marginBottom:12}}>
-            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Geçmiş"}].map(t=>
+            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Haftalık"},{k:"history",l:"Geçmiş"}].map(t=>
               <div key={t.k} className={`tab${tpTab===t.k?" active":""}`} onClick={()=>setTpTab(t.k)}>{t.l}</div>
             )}
           </div>
           {tpTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
             <div className="card" style={{borderLeft:"3px solid "+(tpS.overdue?"var(--red)":"var(--green)")}}>
-              <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
-              <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(30-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+              <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>Haftalık KONTROL</div>
+              <div style={{fontSize:16,fontWeight:700,color:tpS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{tpS.overdue?"⚠ "+tpS.dw+" gün gecikmiş":tpS.dw<999?(7-tpS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
               {tpS.last&&<div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(tpS.last.dt)} — {tpS.last.tech}</div>}
             </div>
             {tpS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
@@ -1195,10 +1195,10 @@ function App(){
               ))}
             </div>}
           </div>}
-          {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET AYLIK KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true}/>}
+          {tpTab==="monthly"&&<FormTemplate title="🔋 TRANSPALET Haftalık KONTROL" color="var(--cyan)" items={lists.tp_monthly} onSubmit={handleTPCheck} sel={{hours:0}} noHours={true}/>}
           {tpTab==="history"&&<div>
             {tpS.checks.length>0&&<div style={{marginBottom:14}}>
-              <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>AYLIK KONTROLLER</div>
+              <div style={{fontSize:12,fontWeight:700,color:"var(--cyan)",marginBottom:8}}>Haftalık KONTROLLER</div>
               {tpS.checks.map(c=>(<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--cyan)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"tp_monthly",record:{...c,fn:selTP.name}})}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#06b6d420",color:"#22d3ee"}}>{c.done} yapıldı — detay →</span></div>
                 <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
@@ -1232,14 +1232,14 @@ function App(){
             <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:800,fontSize:16}}>{selST.name}</span><STBadge/><StatusBadge s={stS}/></div><div style={{fontSize:11,color:"var(--dim)"}}>{[selST.brand,selST.model].filter(Boolean).join(" • ")}</div></div>
           </div>
           <div className="tabs" style={{marginBottom:12}}>
-            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Aylık"},{k:"history",l:"Geçmiş"}].map(t=>
+            {[{k:"status",l:"Durum"},{k:"fault",l:"Arıza"},{k:"monthly",l:"Haftalık"},{k:"history",l:"Geçmiş"}].map(t=>
               <div key={t.k} className={`tab${stTab===t.k?" active":""}`} onClick={()=>setStTab(t.k)}>{t.l}</div>
             )}
           </div>
           {stTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
             <div className="card" style={{borderLeft:"3px solid "+(stS.overdue?"var(--red)":"var(--green)")}}>
-              <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>AYLIK KONTROL</div>
-              <div style={{fontSize:16,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{stS.overdue?"⚠ "+stS.dw+" gün gecikmiş":stS.dw<999?(30-stS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
+              <div style={{fontSize:10,color:"var(--mute)",fontWeight:700,letterSpacing:1}}>Haftalık KONTROL</div>
+              <div style={{fontSize:16,fontWeight:700,color:stS.overdue?"var(--red)":"#4ade80",marginTop:4}}>{stS.overdue?"⚠ "+stS.dw+" gün gecikmiş":stS.dw<999?(7-stS.dw)+" gün kalan":"Henüz yapılmadı"}</div>
               {stS.last&&<div style={{fontSize:11,color:"var(--mute)",marginTop:4}}>Son kontrol: {fd(stS.last.dt)} — {stS.last.tech}</div>}
             </div>
             {stS.openFaults.length>0&&<div className="card" style={{borderLeft:"3px solid var(--red)",background:"#ef444408"}}>
@@ -1263,7 +1263,7 @@ function App(){
           {stTab==="monthly"&&<FormTemplate title="🏗️ İSTİF MAKİNESİ KONTROLÜ" color="var(--pink)" items={lists.st_monthly} onSubmit={handleSTCheck} sel={{hours:0}} noHours={true}/>}
           {stTab==="history"&&<div>
             {stS.checks.length>0&&<div style={{marginBottom:14}}>
-              <div style={{fontSize:12,fontWeight:700,color:"var(--pink)",marginBottom:8}}>AYLIK KONTROLLER</div>
+              <div style={{fontSize:12,fontWeight:700,color:"var(--pink)",marginBottom:8}}>Haftalık KONTROLLER</div>
               {stS.checks.map(c=>(<div key={c.id} className="card" style={{marginBottom:6,borderLeft:"3px solid var(--pink)",cursor:"pointer"}} onClick={()=>setDetailModal({type:"st_monthly",record:{...c,fn:selST.name}})}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:13}}>{fd(c.dt)}</span><span className="badge" style={{background:"#ec489920",color:"#f472b6"}}>{c.done} yapıldı — detay →</span></div>
                 <div style={{fontSize:11,color:"var(--mute)",marginTop:3}}>Personel: <b style={{color:"var(--dim)"}}>{c.tech}</b></div>
