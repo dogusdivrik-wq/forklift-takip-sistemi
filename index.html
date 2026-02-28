@@ -1341,12 +1341,13 @@ function App(){
     </div></div>);
   };
   return(<div>
-    {toast&&<div className="toast">{toast}</div>}
-    {loading&&<div className="loading-screen"><div>İşleniyor...</div></div>}
-    {pg==="dash"&&<Dash/>}
-    {pg==="mob"&&<Mobile/>}
-    {pg==="qr"&&<QRPage/>}
-    {modal==="settings"&&<SettingsModal/>}
+    {toast&&<div className="toast">{toast}</div>}
+    {loading&&<div className="loading-screen"><div>İşleniyor...</div></div>}
+    {pg==="dash"&&Dash()}
+    {pg==="mob"&&Mobile()}
+    {pg==="qr"&&QRPage()}
+    {modal==="settings"&&SettingsModal()}
+    // Modal bileşenlerini (AddFLModal vb.) oldukları gibi bırakabilirsin.
     {modal==="add"&&<AddFLModal/>}
     {modal==="add_tp"&&<AddTPModal/>}
     {modal==="add_st"&&<AddSTModal/>}
