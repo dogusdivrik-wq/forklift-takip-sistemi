@@ -559,19 +559,22 @@ function App(){
     const ws=data.weekly.filter(w=>w.fid===f.id).sort((a,b)=>new Date(b.dt)-new Date(a.dt));
     const fts=data.faults.filter(x=>x.fid===f.id);
     const opn=fts.filter(x=>x.st==="open");
-    const l2h=m2[0]?.h||0,l5h=m5[0]?.h||0,l20h=m20[0]?.h||0;
-    const n2=l2h+250,n5=l5h+500,n20=l20h+2000,r2=n2-f.hours,r5=n5-f.hours,r20=n20-f.hours;
+
+    // HAM DEĞERLER (O tipe ait form doldurulmuş en son saat)
+    const rawL2h = m2[0]?.h || 0;
+    const rawL5h = m5[0]?.h || 0;
+    const rawL20h = m20[0]?.h || 0;
+
+    // MATEMATİKSEL MANTIK: Bir üst bakım, daima alt bakımı kapsar.
+    const l20h = rawL20h;
+    const l5h = Math.max(rawL5h, rawL20h);
+    const l2h = Math.max(rawL2h, rawL5h, rawL20h);
+
+    const n2=l2h+250, n5=l5h+500, n20=l20h+2000, r2=n2-f.hours, r5=n5-f.hours, r20=n20-f.hours;
     const dw=ws[0]?Math.floor((Date.now()-new Date(ws[0].dt).getTime())/864e5):999;
+    
     return{l2:m2[0],l5:m5[0],l20:m20[0],lw:ws[0],l2h,l5h,l20h,n2,n5,n20,r2,r5,r20,o2:r2<=0,o5:r5<=0,o20:r20<=0,w2:r2>0&&r2<=30,w5:r5>0&&r5<=50,w20:r20>0&&r20<=200,dw,ow:dw>7,opn,allF:fts,inF:opn.length>0||f.status==="fault"};
-  },[data,fuelTypes]);
-  const deleteEquipment=(id,type)=>{
-    sendData('equipment_delete',{flId:id,flName:type,person:'admin',hours:0,note:'deleted'});
-    if(sel?.id===id)setSel(null);
-    if(selTP?.id===id)setSelTP(null);
-    if(selST?.id===id)setSelST(null);
-    showToast(type+" Silindi");
-  };
-  const addFL=()=>{
+  },[data,fuelTypes]);  const addFL=()=>{
     const name=flRefs.name.current?.value?.trim();
     if(!name)return alert("Ad zorunlu.");
     const flId="FL-"+uid();
